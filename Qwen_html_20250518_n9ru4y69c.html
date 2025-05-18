@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <title>🐟 Карась-кликер</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom right, #b2ebf2, #e0f7fa);
+      color: #004d40;
+      text-align: center;
+      padding: 30px;
+      margin: 0;
+      overflow-x: hidden;
+      transition: background 0.5s ease, color 0.5s ease;
+    }
+
+    h1 {
+      font-size: 2.5em;
+      margin-bottom: 10px;
+      color: #006064;
+      transition: color 0.5s ease;
+    }
+
+    #score {
+      font-size: 1.8em;
+      margin: 15px 0;
+      color: #00695c;
+      transition: color 0.5s ease;
+    }
+
+    #koi {
+      width: 400px;
+      max-width: 90vw;
+      cursor: pointer;
+      transition: transform 0.1s ease, box-shadow 0.2s ease;
+      border-radius: 12px;
+      box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    #koi:active {
+      transform: scale(0.97);
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+    }
+
+    .button {
+      background-color: #00acc1;
+      border: none;
+      color: white;
+      padding: 12px 24px;
+      margin: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 8px;
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+      transition: background-color 0.3s ease, transform 0.1s ease;
+    }
+
+    .button:hover {
+      background-color: #00838f;
+      transform: translateY(-2px);
+    }
+
+    .button:active {
+      transform: translateY(0);
+    }
+
+    /* Подложка затемнения */
+    .overlay {
+      display: none;
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5);
+      z-index: 999;
+    }
+
+    /* Стили полноэкранных вкладок */
+    .fullscreen-modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: white;
+      z-index: 1000;
+      overflow-y: auto;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .fullscreen-modal.slideIn {
+      animation: slideInLeft 0.3s ease forwards;
+    }
+
+    .fullscreen-modal.slideOut {
+      animation: slideOutRight 0.3s ease forwards;
+    }
+
+    .close-btn {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+      color: red;
+      transition: color 0.3s ease;
+    }
+
+    .close-btn:hover {
+      color: darkred;
+    }
+
+    .tab-buttons {
+      display: flex;
+      justify-content: center;
+      margin-bottom: 20px;
+    }
+
+    .tab-button {
+      background-color: #ddd;
+      border: none;
+      padding: 10px 20px;
+      margin: 0 10px;
+      font-weight: bold;
+      cursor: pointer;
+      border-radius: 6px;
+      transition: background-color 0.3s ease;
+    }
+
+    .tab-button.active {
+      background-color: #bbb;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    @keyframes fadeOut {
+      from { opacity: 1; }
+      to { opacity: 0; }
+    }
+
+    @keyframes slideInLeft {
+      from { transform: translateX(-100%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    @keyframes slideOutRight {
+      from { transform: translateX(0); opacity: 1; }
+      to { transform: translateX(100%); opacity: 0; }
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background-color: gold;
+      color: black;
+      padding: 10px 20px;
+      border-radius: 8px;
+      font-weight: bold;
+      z-index: 2000;
+      animation: notifyAnim 2s ease forwards;
+    }
+
+    @keyframes notifyAnim {
+      0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+      10% { opacity: 1; transform: translateX(-50%) translateY(0); }
+      90% { opacity: 1; }
+      100% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+    }
+
+    .achievement {
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+      background-color: #e0f7fa;
+      font-size: 1em;
+      color: #004d40;
+      border: 2px solid #b2ebf2;
+    }
+
+    .achievement.unlocked {
+      background-color: #a5d6a7;
+      border-color: #66bb6a;
+      color: #1b5e20;
+      font-weight: bold;
+    }
+
+    .themes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 10px;
+    }
+
+    .theme-box {
+      padding: 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+
+    .theme-box:hover {
+      transform: scale(1.05);
+    }
+
+    input[type="color"] {
+      width: 60px;
+      height: 35px;
+      cursor: pointer;
+      border: none;
+      border-radius: 6px;
+    }
+
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 50px;
+      height: 24px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #ccc;
+      transition: 0.4s;
+      border-radius: 24px;
+    }
+
+    .slider:before {
+      content: "";
+      position: absolute;
+      height: 20px;
+      width: 20px;
+      left: 2px;
+      bottom: 2px;
+      background: white;
+      transition: 0.4s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2196F3;
+    }
+
+    input:focus + .slider {
+      box-shadow: 0 0 1px #2196F3;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(26px);
+    }
+
+    .version {
+      margin-top: 30px;
+      font-size: 0.9em;
+      color: #888;
+    }
+
+    /* Анимации */
+    .animate-fade-in {
+      animation: fadeIn 0.3s ease forwards;
+    }
+
+    .animate-slide-in-left {
+      animation: slideInLeft 0.3s ease forwards;
+    }
+
+    .animate-slide-out-right {
+      animation: slideOutRight 0.3s ease forwards;
+    }
+
+    .modal-enter {
+      animation: slideInLeft 0.3s ease forwards;
+    }
+
+    .modal-exit {
+      animation: slideOutRight 0.3s ease forwards;
+    }
+
+    .fade-overlay {
+      animation: overlayFadeIn 0.3s ease forwards;
+    }
+
+    .fade-overlay-out {
+      animation: overlayFadeOut 0.3s ease forwards;
+    }
+
+    @keyframes overlayFadeIn {
+      from { opacity: 0; }
+      to { opacity: 0.5; }
+    }
+
+    @keyframes overlayFadeOut {
+      from { opacity: 0.5; }
+      to { opacity: 0; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Overlay для затемнения фона -->
+  <div class="overlay" id="overlay"></div>
+
+  <h1>🐟 Карась-кликер</h1>
+
+  <!-- Основные элементы -->
+  <img src="images/carp.png" alt="Карась" id="koi">
+  <p id="score">Счёт: 0</p>
+
+  <!-- Кнопки открытия вкладок -->
+  <button class="button" onclick="openModal('shopModal')">🛒 Магазин</button>
+  <button class="button" onclick="openModal('profileModal')">👤 Профиль</button>
+  <button class="button" onclick="openModal('allTabsModal')">📁 Все вкладки</button>
+  <button class="button" onclick="openModal('settingsModal')">⚙️ Настройки</button>
+
+  <!-- Вкладка "Магазин" -->
+  <div id="shopModal" class="fullscreen-modal">
+    <span class="close-btn" onclick="closeModal('shopModal')">&times;</span>
+    <h2>🛒 Магазин улучшений</h2>
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="switchTab(this, 'autoclickTab')">🔁 Автоклик</button>
+      <button class="tab-button" onclick="switchTab(this, 'clickpowerTab')">👆 Клик за тап</button>
+    </div>
+    <div id="autoclickTab" class="tab-content active">
+      <button class="button" onclick="buyAutoClick()">Купить автоклик (стоит 50)</button>
+    </div>
+    <div id="clickpowerTab" class="tab-content">
+      <button class="button" onclick="buyClickPower()">Усиление клика +1 (стоит 10)</button>
+    </div>
+  </div>
+
+  <!-- Вкладка "Профиль" -->
+  <div id="profileModal" class="fullscreen-modal">
+    <span class="close-btn" onclick="closeModal('profileModal')">&times;</span>
+    <h2>📊 Ваш профиль</h2>
+    <div class="stats">
+      <p>Общее количество очков: <span id="stat-score">0</span></p>
+      <p>Сила клика: <span id="stat-power">1</span></p>
+      <p>Автоклик активен: <span id="stat-autoclick">Нет</span></p>
+    </div>
+  </div>
+
+  <!-- Вкладка "Все вкладки" -->
+  <div id="allTabsModal" class="fullscreen-modal">
+    <span class="close-btn" onclick="closeModal('allTabsModal')">&times;</span>
+    <h2>📁 Все вкладки</h2>
+    <div class="tab-buttons">
+      <button class="tab-button active" onclick="switchAllTabsTab(this, 'customizationTab')">🎨 Кастомизация</button>
+      <button class="tab-button" onclick="switchAllTabsTab(this, 'achievementsTab')">🏆 Достижения</button>
+    </div>
+    <div id="customizationTab" class="tab-content active">
+      <div class="tab-buttons">
+        <button class="tab-button active" onclick="switchCustomizeTab(this, 'paletteTab')">🎨 Палитра</button>
+        <button class="tab-button" onclick="switchCustomizeTab(this, 'themesTab')">🖼 Темы</button>
+      </div>
+      <div id="paletteTab" class="tab-content active">
+        <form class="color-picker">
+          <label for="bgColor">Цвет фона:</label>
+          <input type="color" id="bgColor" value="#b2ebf2" onchange="changeBackground(this.value)">
+          <br><br>
+          <label for="textColor">Цвет текста:</label>
+          <input type="color" id="textColor" value="#004d40" onchange="changeText(this.value)">
+          <br><br>
+          <label for="btnColor">Цвет кнопок:</label>
+          <input type="color" id="btnColor" value="#00acc1" onchange="changeButtons(this.value)">
+        </form>
+      </div>
+      <div id="themesTab" class="tab-content">
+        <div class="search-box">
+          <input type="text" id="themeSearch" placeholder="Поиск темы..." onkeyup="filterThemes()">
+        </div>
+        <div class="themes-grid" id="themesGrid"></div>
+      </div>
+    </div>
+
+    <div id="achievementsTab" class="tab-content">
+      <h3>🏆 Ваши достижения</h3>
+      <div id="achievementsList"></div>
+    </div>
+  </div>
+
+  <!-- Вкладка "Настройки" -->
+  <div id="settingsModal" class="fullscreen-modal">
+    <span class="close-btn" onclick="closeModal('settingsModal')">&times;</span>
+    <h2>⚙️ Настройки</h2>
+    <div class="settings-group">
+      <button class="button" onclick="saveProgress()">💾 Сохранить прогресс</button>
+      <button class="button" onclick="loadProgress()">🔄 Загрузить прогресс</button>
+      <button classbutton.onclick="resetGame()">🗑️ Сбросить игру</button>
+      <button class="button" onclick="copyProgress()">📋 Копировать прогресс</button>
+    </div>
+
+    <div class="settings-group">
+      <label>🔊 Звуки</label>
+      <label class="switch">
+        <input type="checkbox" id="soundToggle" checked>
+        <span class="slider"></span>
+      </label>
+    </div>
+
+    <div class="settings-group">
+      <label>ℹ️ Версия игры</label>
+      <p class="version">v1.0.0</p>
+    </div>
+  </div>
+
+  <script>
+    let score = 0;
+    let clickPower = 1;
+    let autoClickInterval = null;
+
+    const scoreDisplay = document.getElementById("score");
+    const koi = document.getElementById("koi");
+
+    const statScore = document.getElementById("stat-score");
+    const statPower = document.getElementById("stat-power");
+    const statAutoClick = document.getElementById("stat-autoclick");
+
+    // Достижения
+    const achievements = [
+      {id: 'first_click', name: 'Первый клик', condition: s => s.totalClicks >= 1},
+      {id: 'ten_clicks', name: 'Хороший старт!', condition: s => s.totalClicks >= 10},
+      {id: 'hundred_clicks', name: 'Постоянный кликер', condition: s => s.totalClicks >= 100},
+      {id: 'thousand_clicks', name: 'Профессионал', condition: s => s.totalClicks >= 1000},
+      {id: 'click_power_1', name: 'Сила в руках!', condition: s => s.clickPower >= 2},
+      {id: 'click_power_5', name: 'Гигантский удар!', condition: s => s.clickPower >= 5},
+      {id: 'score_10', name: 'Стартовый баланс', condition: s => s.score >= 10},
+      {id: 'score_50', name: 'Разминка', condition: s => s.score >= 50},
+      {id: 'score_100', name: 'Ты уже кто-то!', condition: s => s.score >= 100},
+      {id: 'score_500', name: 'Великий рыбак', condition: s => s.score >= 500},
+      {id: 'score_1000', name: 'Грандмастер', condition: s => s.score >= 1000},
+      {id: 'auto_clicker_bought', name: 'Автоматизация', condition: s => s.autoClickBought},
+      {id: 'score_50_auto', name: 'Богач на 50', condition: s => s.score >= 50 && s.autoClickBought},
+      {id: 'score_100_auto', name: 'Опытный богач', condition: s => s.score >= 100 && s.autoClickBought},
+      {id: 'click_power_10', name: 'Удар молнии', condition: s => s.clickPower >= 10},
+      {id: 'score_10000', name: 'Легендарный карась', condition: s => s.score >= 10000},
+      {id: 'score_5000', name: 'Миллионер в своём деле', condition: s => s.score >= 5000},
+      {id: 'all_tabs_opened', name: 'Исследователь', condition: s => s.tabsOpened === 4},
+      {id: 'dark_theme_used', name: 'Темнота во благо', condition: s => s.currentTheme === 'dark'},
+      {id: 'max_combo', name: 'Максимальный клик', condition: s => s.clickPower >= 10 && s.autoClickBought}
+    ];
+
+    let unlockedAchievements = new Set();
+    let totalClicks = 0;
+    let openedTabs = new Set();
+    let currentTheme = 'light';
+
+    function updateScore() {
+      score += clickPower;
+      scoreDisplay.textContent = "Счёт: " + Math.floor(score);
+      totalClicks++;
+      checkAchievements();
+      updateStats();
+    }
+
+    koi.addEventListener("click", () => {
+      updateScore();
+    });
+
+    function buyClickPower() {
+      const cost = 10;
+      if (score >= cost) {
+        score -= cost;
+        clickPower += 1;
+        updateScore();
+        alert("Вы усилили клик! Теперь вы получаете +" + clickPower + " за клик.");
+        checkAchievements();
+      } else {
+        alert("Недостаточно очков для покупки!");
+      }
+    }
+
+    function buyAutoClick() {
+      const cost = 50;
+      if (score >= cost && !autoClickInterval) {
+        score -= cost;
+        updateScore();
+        autoClickInterval = setInterval(() => {
+          score += clickPower;
+          scoreDisplay.textContent = "Счёт: " + Math.floor(score);
+          updateStats();
+          checkAchievements();
+        }, 1000);
+        alert("Автоклик активирован!");
+        checkAchievements();
+      } else if (autoClickInterval) {
+        alert("Автоклик уже куплен!");
+      } else {
+        alert("Недостаточно очков для покупки автоклика!");
+      }
+    }
+
+    function updateStats() {
+      statScore.textContent = Math.floor(score);
+      statPower.textContent = clickPower;
+      statAutoClick.textContent = autoClickInterval ? "Да" : "Нет";
+    }
+
+    function openModal(id) {
+      const modal = document.getElementById(id);
+      const overlay = document.getElementById("overlay");
+
+      document.querySelectorAll('.fullscreen-modal').forEach(m => m.classList.remove('slideIn', 'slideOut'));
+      void modal.offsetWidth;
+      modal.style.display = 'block';
+      modal.classList.add('slideIn');
+      overlay.classList.add('fade-overlay');
+      overlay.style.display = 'block';
+    }
+
+    function closeModal(id) {
+      const modal = document.getElementById(id);
+      const overlay = document.getElementById("overlay");
+
+      modal.classList.remove('slideIn');
+      modal.classList.add('slideOut');
+
+      setTimeout(() => {
+        modal.style.display = 'none';
+        modal.classList.remove('slideOut');
+        overlay.classList.remove('fade-overlay');
+        overlay.style.display = 'none';
+      }, 300);
+    }
+
+    function switchTab(button, tabId) {
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function switchAllTabsTab(button, tabId) {
+      document.querySelectorAll('#allTabsModal .tab-button').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      document.querySelectorAll('#allTabsModal .tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function switchCustomizeTab(button, tabId) {
+      document.querySelectorAll('#customizationTab .tab-button').forEach(btn => btn.classList.remove('active'));
+      button.classList.add('active');
+
+      document.querySelectorAll('#customizationTab .tab-content').forEach(tab => tab.classList.remove('active'));
+      document.getElementById(tabId).classList.add('active');
+    }
+
+    function generateThemes() {
+      const themesGrid = document.getElementById("themesGrid");
+      window.themes = [
+        { name: 'Зелёная', bg: '#a5d6a7', text: '#2e7d32', btn: '#66bb6a' },
+        { name: 'Морская', bg: '#90caf9', text: '#0d47a1', btn: '#42a5f5' },
+        { name: 'Тёмная', bg: '#212121', text: '#eeeeee', btn: '#424242' },
+        { name: 'Красная', bg: '#ef9a9a', text: '#c62828', btn: '#e53935' },
+        { name: 'Жёлтая', bg: '#fff59d', text: '#fbc02d', btn: '#fdd835' },
+        { name: 'Фиолетовая', bg: '#ce93d8', text: '#6a1b9a', btn: '#ab47bc' },
+        { name: 'Оранжевая', bg: '#ffe082', text: '#ffa726', btn: '#ffb300' },
+        { name: 'Серая', bg: '#e0e0e0', text: '#424242', btn: '#9e9e9e' },
+        { name: 'Голубая', bg: '#81d4fa', text: '#0277bd', btn: '#29b6f6' },
+        { name: 'Кофе', bg: '#d7ccc8', text: '#3e2723', btn: '#a1887f' }
+      ];
+
+      themesGrid.innerHTML = '';
+      window.themes.forEach(theme => {
+        const div = document.createElement("div");
+        div.className = "theme-box";
+        div.textContent = theme.name;
+        div.style.background = theme.bg;
+        div.style.color = theme.text;
+        div.onclick = () => applyTheme(theme);
+        themesGrid.appendChild(div);
+      });
+    }
+
+    function filterThemes() {
+      const query = document.getElementById("themeSearch").value.toLowerCase();
+      const boxes = document.getElementById("themesGrid").getElementsByClassName("theme-box");
+      Array.from(boxes).forEach(box => {
+        const txtValue = box.textContent || box.innerText;
+        box.style.display = txtValue.toLowerCase().indexOf(query) > -1 ? "block" : "none";
+      });
+    }
+
+    function applyTheme(theme) {
+      changeBackground(theme.bg);
+      changeText(theme.text);
+      changeButtons(theme.btn);
+      currentTheme = theme.name;
+      checkAchievements();
+    }
+
+    function changeBackground(color) {
+      document.body.style.background = `linear-gradient(to bottom right, ${color}, ${shadeColor(color, -20)})`;
+    }
+
+    function changeText(color) {
+      document.body.style.color = color;
+      document.querySelector('h1').style.color = color;
+      document.querySelector('#score').style.color = shadeColor(color, -30);
+    }
+
+    function changeButtons(color) {
+      document.querySelectorAll('.button').forEach(btn => btn.style.backgroundColor = color);
+    }
+
+    function showNotification(text) {
+      const notif = document.createElement("div");
+      notif.className = "notification";
+      notif.textContent = text;
+      document.body.appendChild(notif);
+      setTimeout(() => notif.remove(), 2000);
+    }
+
+    function checkAchievements() {
+      const state = {
+        score,
+        clickPower,
+        totalClicks,
+        autoClickBought: !!autoClickInterval,
+        tabsOpened: openedTabs.size,
+        currentTheme
+      };
+
+      achievements.forEach(ach => {
+        if (!unlockedAchievements.has(ach.id) && ach.condition(state)) {
+          unlockedAchievements.add(ach.id);
+          showNotification(`🏆 Получено достижение: ${ach.name}`);
+        }
+
+        const el = document.getElementById('ach-' + ach.id);
+        if (el) el.classList.toggle("unlocked", unlockedAchievements.has(ach.id));
+      });
+    }
+
+    function generateAchievements() {
+      const container = document.getElementById("achievementsList");
+      container.innerHTML = "";
+      achievements.forEach(ach => {
+        const div = document.createElement("div");
+        div.className = "achievement";
+        div.id = 'ach-' + ach.id;
+        div.textContent = ach.name;
+        container.appendChild(div);
+      });
+      checkAchievements();
+    }
+
+    function saveProgress() {
+      const data = {
+        score,
+        clickPower,
+        autoClickBought: !!autoClickInterval,
+        totalClicks,
+        currentTheme
+      };
+      localStorage.setItem("carpClickerSave", JSON.stringify(data));
+      showNotification("💾 Прогресс сохранён!");
+    }
+
+    function loadProgress() {
+      const data = JSON.parse(localStorage.getItem("carpClickerSave"));
+      if (data) {
+        score = data.score;
+        clickPower = data.clickPower;
+        totalClicks = data.totalClicks;
+        currentTheme = data.currentTheme;
+
+        if (data.autoClickBought && !autoClickInterval) {
+          autoClickInterval = setInterval(() => {
+            score += clickPower;
+            scoreDisplay.textContent = "Счёт: " + Math.floor(score);
+            updateStats();
+          }, 1000);
+        }
+
+        updateScore();
+        applyTheme(window.themes.find(t => t.name === currentTheme) || window.themes[0]);
+        showNotification("🔄 Прогресс загружен!");
+      } else {
+        alert("Нет сохранённого прогресса!");
+      }
+    }
+
+    function resetGame() {
+      if (confirm("Вы уверены, что хотите сбросить игру?")) {
+        score = 0;
+        clickPower = 1;
+        totalClicks = 0;
+        currentTheme = 'light';
+        if (autoClickInterval) clearInterval(autoClickInterval);
+        autoClickInterval = null;
+        updateScore();
+        applyTheme(window.themes[0]);
+        unlockedAchievements.clear();
+        generateAchievements();
+        showNotification("🗑️ Игра сброшена!");
+      }
+    }
+
+    function copyProgress() {
+      const data = JSON.stringify({
+        score,
+        clickPower,
+        totalClicks,
+        autoClickBought: !!autoClickInterval,
+        currentTheme
+      });
+
+      navigator.clipboard.writeText(data).then(() => {
+        showNotification("📋 Прогресс скопирован в буфер!");
+      }).catch(() => {
+        alert("Ошибка копирования");
+      });
+    }
+
+    function updateStats() {
+      statScore.textContent = Math.floor(score);
+      statPower.textContent = clickPower;
+      statAutoClick.textContent = autoClickInterval ? "Да" : "Нет";
+    }
+
+    function generateAllContent() {
+      generateThemes();
+      generateAchievements();
+    }
+
+    function shadeColor(color, percent) {
+      let R = parseInt(color.substring(1,3),16);
+      let G = parseInt(color.substring(3,5),16);
+      let B = parseInt(color.substring(5,7),16);
+
+      R = Math.min(255, Math.max(0, parseInt(R * (100 + percent)/100)));
+      G = Math.min(255, Math.max(0, parseInt(G * (100 + percent)/100)));
+      B = Math.min(255, Math.max(0, parseInt(B * (100 + percent)/100)));
+
+      return "#" +
+        ((R < 16 ? "0" : "") + R.toString(16)) +
+        ((G < 16 ? "0" : "") + G.toString(16)) +
+        ((B < 16 ? "0" : "") + B.toString(16));
+    }
+
+    window.onload = () => {
+      generateAllContent();
+      const saved = JSON.parse(localStorage.getItem("carpClickerSave") || "{}");
+      if (saved.score !== undefined) loadProgress();
+
+      const settings = JSON.parse(localStorage.getItem("carpClickerSettings") || "{}");
+      document.getElementById("soundToggle").checked = settings.sound !== false;
+    };
+
+    window.onbeforeunload = () => {
+      localStorage.setItem("carpClickerSettings", JSON.stringify({
+        sound: document.getElementById("soundToggle").checked
+      }));
+    };
+  </script>
+
+</body>
+</html>
