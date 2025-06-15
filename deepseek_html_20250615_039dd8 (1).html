@@ -1,0 +1,2841 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Карась-Кликер 3D</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: var(--bg-color, #e0f7fa);
+            margin: 0;
+            padding: 20px;
+            background-image: var(--bg-image, url('img/background-default.png'));
+            background-size: cover;
+            overflow-x: hidden;
+            transition: all 0.3s;
+            color: var(--text-color, #333);
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            background-color: var(--container-bg, rgba(255, 255, 255, 0.9));
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: var(--container-shadow, 0 0 10px rgba(0, 0, 0, 0.1));
+            position: relative;
+            z-index: 10;
+            transition: all 0.3s;
+        }
+        h1 {
+            color: var(--header-color, #00796b);
+            text-shadow: var(--header-shadow, 1px 1px 2px rgba(0,0,0,0.2));
+            transition: all 0.3s;
+        }
+        #carp-container {
+            position: relative;
+            width: 400px;
+            height: 400px;
+            margin: 20px auto;
+        }
+        #carp {
+            width: 300px;
+            height: 300px;
+            cursor: pointer;
+            transition: transform 0.1s;
+            object-fit: contain;
+            position: absolute;
+            top: 50px;
+            left: 50px;
+            z-index: 10;
+            animation: float 3s ease-in-out infinite;
+            filter: var(--carp-filter, none);
+        }
+        .pet-icon {
+            width: 120px;
+            height: 120px;
+            object-fit: contain;
+            position: absolute;
+            transition: all 0.5s;
+            z-index: 5;
+            cursor: pointer;
+        }
+        #carp:active {
+            transform: scale(0.95);
+        }
+        #counter {
+            font-size: 24px;
+            margin: 20px 0;
+            color: var(--counter-color, #00796b);
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        .tab {
+            overflow: hidden;
+            border: 1px solid var(--tab-border, #ccc);
+            background-color: var(--tab-bg, #f1f1f1);
+            border-radius: 5px;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+        .tab button {
+            background-color: inherit;
+            float: left;
+            border: none;
+            outline: none;
+            cursor: pointer;
+            padding: 10px 16px;
+            transition: 0.3s;
+            font-size: 14px;
+            color: var(--tab-text, #333);
+        }
+        .tab button:hover {
+            background-color: var(--tab-hover, #ddd);
+        }
+        .tab button.active {
+            background-color: var(--tab-active-bg, #4db6ac);
+            color: var(--tab-active-text, white);
+        }
+        .tabcontent {
+            display: none;
+            padding: 10px;
+            border: 1px solid var(--tabcontent-border, #ccc);
+            border-top: none;
+            border-radius: 0 0 5px 5px;
+            animation: fadeEffect 1s;
+            background-color: var(--tabcontent-bg, white);
+            color: var(--tabcontent-text, #333);
+        }
+        @keyframes fadeEffect {
+            from {opacity: 0;}
+            to {opacity: 1;}
+        }
+        .upgrade {
+            background-color: var(--upgrade-bg, #4db6ac);
+            color: var(--upgrade-text, white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+            text-align: left;
+            box-shadow: var(--upgrade-shadow, 0 2px 5px rgba(0,0,0,0.1));
+        }
+        .upgrade:hover {
+            background-color: var(--upgrade-hover, #26a69a);
+            transform: translateY(-2px);
+        }
+        .upgrade:disabled {
+            background-color: var(--upgrade-disabled, #b2dfdb);
+            cursor: not-allowed;
+        }
+        .customization-option {
+            background-color: var(--customization-bg, #81d4fa);
+            color: var(--customization-text, white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+            text-align: left;
+            box-shadow: var(--customization-shadow, 0 2px 5px rgba(0,0,0,0.1));
+        }
+        .customization-option:hover {
+            background-color: var(--customization-hover, #4fc3f7);
+            transform: translateY(-2px);
+        }
+        .customization-option:disabled {
+            background-color: var(--customization-disabled, #b3e5fc);
+            cursor: not-allowed;
+        }
+        .pet {
+            background-color: var(--pet-bg, #ce93d8);
+            color: var(--pet-text, white);
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: all 0.3s;
+            margin: 5px;
+            width: 100%;
+            text-align: left;
+            position: relative;
+            box-shadow: var(--pet-shadow, 0 2px 5px rgba(0,0,0,0.1));
+        }
+        .pet:hover {
+            background-color: var(--pet-hover, #ba68c8);
+            transform: translateY(-2px);
+        }
+        .pet:disabled {
+            background-color: var(--pet-disabled, #e1bee7);
+            cursor: not-allowed;
+        }
+        .common {
+            border-left: 5px solid var(--common-border, #9e9e9e);
+        }
+        .rare {
+            border-left: 5px solid var(--rare-border, #42a5f5);
+        }
+        .epic {
+            border-left: 5px solid var(--epic-border, #ab47bc);
+        }
+        .legendary {
+            border-left: 5px solid var(--legendary-border, #ffa000);
+        }
+        #stats {
+            margin-top: 20px;
+            text-align: left;
+            padding: 10px;
+            background-color: var(--stats-bg, #e0f7fa);
+            border-radius: 5px;
+            box-shadow: var(--stats-shadow, inset 0 0 5px rgba(0,0,0,0.1));
+            color: var(--stats-text, #333);
+        }
+        .pet-badge {
+            position: absolute;
+            right: 10px;
+            top: 10px;
+            font-size: 12px;
+            padding: 2px 5px;
+            border-radius: 3px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+            color: white;
+        }
+        .common-badge {
+            background-color: var(--common-badge, #9e9e9e);
+        }
+        .rare-badge {
+            background-color: var(--rare-badge, #42a5f5);
+        }
+        .epic-badge {
+            background-color: var(--epic-badge, #ab47bc);
+        }
+        .legendary-badge {
+            background-color: var(--legendary-badge, #ffa000);
+        }
+        .glitch-effect {
+            animation: glitch 1s linear infinite;
+        }
+        .pet-drop-animation {
+            animation: petDrop 2s forwards;
+            z-index: 1000;
+        }
+        .pet-toggle {
+            position: absolute;
+            right: 10px;
+            bottom: 10px;
+            background: var(--pet-toggle-bg, #ff5722);
+            color: white;
+            border: none;
+            border-radius: 3px;
+            padding: 2px 5px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.2);
+        }
+        .pet-toggle:hover {
+            transform: scale(1.05);
+        }
+        .pet-btn-icon {
+            width: 40px;
+            height: 40px;
+            vertical-align: middle;
+            margin-left: 10px;
+        }
+        .pet-btn-text {
+            vertical-align: middle;
+        }
+        .pet-menu {
+            display: none;
+            position: absolute;
+            background: white;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            padding: 5px;
+            z-index: 100;
+            box-shadow: 0 0 10px rgba(0,0,0,0.2);
+            animation: fadeIn 0.3s;
+        }
+        .pet-menu button {
+            display: block;
+            width: 100%;
+            padding: 5px;
+            margin: 2px 0;
+            background: #f1f1f1;
+            border: none;
+            cursor: pointer;
+            border-radius: 3px;
+            transition: all 0.2s;
+        }
+        .pet-menu button:hover {
+            background: #ddd;
+            transform: translateX(3px);
+        }
+        #pet-drop-notification {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+            animation: bounceIn 0.5s;
+        }
+        #save-notification {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 5px;
+            z-index: 1000;
+            display: none;
+            animation: fadeIn 0.5s;
+        }
+        .pet-positions {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .pet-position {
+            position: absolute;
+            width: 120px;
+            height: 120px;
+        }
+        .bubble {
+            position: absolute;
+            background-color: rgba(255,255,255,0.7);
+            border-radius: 50%;
+            animation: bubbleUp 4s linear forwards;
+            z-index: 1;
+        }
+        .pet-pagination {
+            margin: 20px auto;
+            text-align: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 15px;
+        }
+        .pet-arrow {
+            background-color: var(--pagination-bg, #4db6ac);
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        .pet-arrow:hover {
+            background-color: var(--pagination-hover, #26a69a);
+            transform: scale(1.1);
+        }
+        .pet-arrow:disabled {
+            background-color: var(--pagination-disabled, #b2dfdb);
+            cursor: not-allowed;
+            transform: none;
+        }
+        #pet-page {
+            font-weight: bold;
+            color: var(--pagination-text, #00796b);
+            min-width: 50px;
+            text-align: center;
+        }
+        
+        /* 3D World Styles */
+        #world-3d {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+            background-color: #87CEEB;
+        }
+        #world-3d canvas {
+            display: block;
+        }
+        #world-stats {
+            position: fixed;
+            top: 10px;
+            left: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            padding: 5px 10px;
+            border-radius: 5px;
+            z-index: 1001;
+            font-size: 14px;
+        }
+        #exit-3d-btn {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            background: rgba(0,0,0,0.5);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            padding: 5px 10px;
+            z-index: 1001;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        #exit-3d-btn:hover {
+            background: rgba(0,0,0,0.7);
+        }
+        
+        /* Virtual Joystick */
+        #joystick-container {
+            position: fixed;
+            bottom: 80px;
+            left: 80px;
+            width: 150px;
+            height: 150px;
+            z-index: 1001;
+            display: none;
+        }
+        #joystick-base {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.2);
+            border-radius: 50%;
+            border: 3px solid rgba(255,255,255,0.7);
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        #joystick {
+            position: absolute;
+            width: 70px;
+            height: 70px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            touch-action: none;
+            box-shadow: 0 0 5px rgba(0,0,0,0.5);
+        }
+        
+        /* Depth Controls */
+        #depth-controls {
+            position: fixed;
+            bottom: 80px;
+            right: 80px;
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+        }
+        .depth-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.7);
+            color: white;
+            font-size: 24px;
+            margin: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        /* Camera Controls */
+        #camera-controls {
+            position: fixed;
+            right: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 1001;
+            display: none;
+            flex-direction: column;
+            gap: 10px;
+            touch-action: none;
+        }
+        
+        .camera-btn {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid rgba(255,255,255,0.7);
+            color: white;
+            font-size: 24px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            touch-action: none;
+        }
+        
+        #camera-rotate {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.1);
+            border: 2px dashed rgba(255,255,255,0.5);
+            position: relative;
+            touch-action: none;
+        }
+        
+        #camera-dot {
+            width: 20px;
+            height: 20px;
+            background: rgba(255,255,255,0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            touch-action: none;
+        }
+        
+        /* Theme buttons */
+        .theme-btn {
+            display: inline-block;
+            width: 80px;
+            height: 80px;
+            margin: 10px;
+            border-radius: 10px;
+            cursor: pointer;
+            border: 3px solid transparent;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .theme-btn:hover {
+            transform: scale(1.05);
+        }
+        .theme-btn.active {
+            border-color: #00796b;
+            transform: scale(1.05);
+        }
+        .theme-label {
+            display: block;
+            margin-top: 5px;
+            font-weight: bold;
+        }
+        
+        /* Customization controls */
+        .color-picker {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .color-picker label {
+            width: 150px;
+            text-align: right;
+            margin-right: 10px;
+            font-weight: bold;
+        }
+        .color-picker input[type="color"] {
+            width: 50px;
+            height: 30px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .color-picker input[type="text"] {
+            width: 100px;
+            padding: 5px;
+            margin-left: 10px;
+            border: 1px solid #ccc;
+            border-radius: 5px;
+        }
+        .customization-section {
+            margin: 15px 0;
+            padding: 10px;
+            background-color: rgba(0,0,0,0.05);
+            border-radius: 5px;
+        }
+        .customization-section h4 {
+            margin-top: 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 5px;
+        }
+        #reset-customization {
+            background-color: #ff5722;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 20px;
+            font-weight: bold;
+        }
+        #reset-customization:hover {
+            background-color: #e64a19;
+        }
+        #save-customization {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            font-weight: bold;
+        }
+        #save-customization:hover {
+            background-color: #388e3c;
+        }
+        
+        /* New upgrades tab styles */
+        .upgrade-category {
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 10px;
+            background-color: rgba(255,255,255,0.7);
+        }
+        .upgrade-category h3 {
+            margin-top: 0;
+            color: #00796b;
+            border-bottom: 1px solid #00796b;
+            padding-bottom: 5px;
+        }
+        .upgrade-item {
+            display: flex;
+            align-items: center;
+            margin: 5px 0;
+            padding: 8px;
+            background-color: rgba(255,255,255,0.8);
+            border-radius: 5px;
+            transition: all 0.2s;
+        }
+        .upgrade-item:hover {
+            background-color: rgba(0,121,107,0.1);
+        }
+        .upgrade-icon {
+            width: 40px;
+            height: 40px;
+            margin-right: 10px;
+            background-color: #4db6ac;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .upgrade-info {
+            flex-grow: 1;
+        }
+        .upgrade-name {
+            font-weight: bold;
+            margin-bottom: 3px;
+        }
+        .upgrade-description {
+            font-size: 12px;
+            color: #666;
+        }
+        .upgrade-level {
+            min-width: 60px;
+            text-align: center;
+            font-weight: bold;
+            color: #00796b;
+        }
+        .upgrade-cost {
+            min-width: 80px;
+            text-align: right;
+            font-weight: bold;
+            color: #ff5722;
+        }
+        .upgrade-btn {
+            background-color: #4db6ac;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: all 0.2s;
+        }
+        .upgrade-btn:hover {
+            background-color: #26a69a;
+        }
+        .upgrade-btn:disabled {
+            background-color: #b2dfdb;
+            cursor: not-allowed;
+        }
+        .progress-bar {
+            height: 5px;
+            background-color: #e0e0e0;
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        .progress-fill {
+            height: 100%;
+            background-color: #4db6ac;
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        /* Анимации */
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes petFloat {
+            0%, 100% { transform: translateY(0) rotate(0deg); }
+            25% { transform: translateY(-5px) rotate(2deg); }
+            50% { transform: translateY(0) rotate(0deg); }
+            75% { transform: translateY(-5px) rotate(-2deg); }
+            100% { transform: translateY(0) rotate(0deg); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        @keyframes glitch {
+            0% { filter: hue-rotate(0deg); transform: translate(0); }
+            20% { filter: hue-rotate(90deg); transform: translate(-2px, 2px); }
+            40% { filter: hue-rotate(180deg); transform: translate(2px, -2px); }
+            60% { filter: hue-rotate(270deg); transform: translate(-3px, 1px); }
+            80% { filter: hue-rotate(360deg); transform: translate(1px, -3px); }
+            100% { filter: hue-rotate(0deg); transform: translate(0); }
+        }
+        @keyframes petDrop {
+            0% { transform: translateY(-100px) rotate(0deg); opacity: 0; }
+            20% { transform: translateY(0) rotate(360deg); opacity: 1; }
+            80% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100px) rotate(-360deg); opacity: 0; }
+        }
+        @keyframes floatUp {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-50px); opacity: 0; }
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes bounceIn {
+            0% { transform: translateX(-50%) scale(0.5); opacity: 0; }
+            70% { transform: translateX(-50%) scale(1.1); opacity: 1; }
+            100% { transform: translateX(-50%) scale(1); }
+        }
+        @keyframes bubbleUp {
+            0% { transform: translateY(0) scale(0.2); opacity: 0; }
+            10% { opacity: 0.5; }
+            100% { transform: translateY(-200px) scale(1); opacity: 0; }
+        }
+        @keyframes swim {
+            0% { transform: translateX(0) rotate(0deg); }
+            25% { transform: translateX(20px) rotate(5deg); }
+            50% { transform: translateX(0) rotate(0deg); }
+            75% { transform: translateX(-20px) rotate(-5deg); }
+            100% { transform: translateX(0) rotate(0deg); }
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+        @keyframes flicker {
+            0%, 100% { opacity: 0.8; }
+            50% { opacity: 0.4; }
+        }
+        @keyframes glow {
+            0% { filter: brightness(100%); }
+            50% { filter: brightness(150%); }
+            100% { filter: brightness(100%); }
+        }
+    </style>
+</head>
+<body class="default-theme">
+    <div id="pet-drop-notification">Новый питомец выпал!</div>
+    <div id="save-notification">Игра сохранена!</div>
+    
+    <div class="container">
+        <h1>Карась-Кликер 3D</h1>
+        <p>Кликайте по карасю, чтобы зарабатывать очки и находить питомцев!</p>
+        
+        <div id="counter">Карасей: 0</div>
+        
+        <div id="carp-container">
+            <img id="carp" src="img/carp.png" alt="Карась">
+            <div class="pet-positions">
+                <div class="pet-position" style="top: 0; left: 150px;"></div>
+                <div class="pet-position" style="top: 50px; left: 280px;"></div>
+                <div class="pet-position" style="top: 150px; left: 320px;"></div>
+                <div class="pet-position" style="top: 250px; left: 280px;"></div>
+                <div class="pet-position" style="top: 300px; left: 150px;"></div>
+                <div class="pet-position" style="top: 250px; left: 20px;"></div>
+                <div class="pet-position" style="top: 150px; left: -20px;"></div>
+                <div class="pet-position" style="top: 50px; left: 20px;"></div>
+            </div>
+        </div>
+        
+        <!-- 3D World Container -->
+        <div id="world-3d">
+            <div id="world-stats">Скорость: 1.0 | Очки: 0 | Собрано: 0 карасей</div>
+            <button id="exit-3d-btn">Выйти из 3D мира</button>
+        </div>
+        
+        <!-- Virtual Joystick -->
+        <div id="joystick-container">
+            <div id="joystick-base"></div>
+            <div id="joystick"></div>
+        </div>
+        
+        <!-- Depth Controls -->
+        <div id="depth-controls">
+            <div class="depth-btn" id="up-btn">↑</div>
+            <div class="depth-btn" id="down-btn">↓</div>
+        </div>
+        
+        <!-- Camera Controls -->
+        <div id="camera-controls">
+            <div id="camera-rotate">
+                <div id="camera-dot"></div>
+            </div>
+            <div class="camera-btn" id="camera-zoom-in">+</div>
+            <div class="camera-btn" id="camera-zoom-out">-</div>
+            <div class="camera-btn" id="camera-reset">↻</div>
+        </div>
+        
+        <!-- Добавляем пагинацию для питомцев -->
+        <div class="pet-pagination">
+            <button class="pet-arrow" id="prev-pet-page" disabled>◄</button>
+            <span id="pet-page">1/1</span>
+            <button class="pet-arrow" id="next-pet-page" disabled>►</button>
+        </div>
+        
+        <div class="tab">
+            <button class="tablinks active" onclick="openTab(event, 'Shop')">Магазин</button>
+            <button class="tablinks" onclick="openTab(event, 'Upgrades')">Улучшения</button>
+            <button class="tablinks" onclick="openTab(event, 'Pets')">Питомцы</button>
+            <button class="tablinks" onclick="openTab(event, 'Customization')">Кастомизация</button>
+            <button class="tablinks" onclick="openTab(event, 'Themes')">Темы</button>
+            <button class="tablinks" onclick="openTab(event, 'ManualCustomization')">Ручная настройка</button>
+            <button class="tablinks" id="world3d-tab" onclick="open3DWorld()">3D Мир</button>
+        </div>
+        
+        <div id="Shop" class="tabcontent" style="display: block;">
+            <h3>Улучшения</h3>
+            <button class="upgrade" id="autoClickerBtn">
+                Автокликер (10 карасей)<br>+1 карась/сек
+            </button>
+            <button class="upgrade" id="doubleClickBtn">
+                Удвоение (50 карасей)<br>х2 за клик
+            </button>
+            <button class="upgrade" id="megaCarpBtn">
+                Мега-карась (100 карасей)<br>+10 за клик
+            </button>
+            <button class="upgrade" id="unlock3DBtn">
+                Разблокировать 3D мир (500 карасей)
+            </button>
+        </div>
+        
+        <div id="Upgrades" class="tabcontent">
+            <h2>Улучшения карася</h2>
+            <p>Прокачивайте своего карася, чтобы увеличивать доход и получать бонусы!</p>
+            
+            <div class="upgrade-category">
+                <h3>Основные улучшения</h3>
+                <div id="basic-upgrades-list"></div>
+            </div>
+            
+            <div class="upgrade-category">
+                <h3>Сила клика</h3>
+                <div id="click-power-list"></div>
+            </div>
+            
+            <div class="upgrade-category">
+                <h3>Автоматический доход</h3>
+                <div id="income-upgrades-list"></div>
+            </div>
+            
+            <div class="upgrade-category">
+                <h3>Множители</h3>
+                <div id="multiplier-upgrades-list"></div>
+            </div>
+            
+            <div class="upgrade-category">
+                <h3>Особые способности</h3>
+                <div id="special-upgrades-list"></div>
+            </div>
+        </div>
+        
+        <div id="Pets" class="tabcontent">
+            <h3>Карасе-питомцы</h3>
+            <div id="pets-list"></div>
+        </div>
+        
+        <div id="Customization" class="tabcontent">
+            <h3>Внешний вид</h3>
+            <button class="customization-option" id="goldCarpBtn">
+                Золотой карась (200 карасей)
+            </button>
+            <button class="customization-option" id="hatBtn">
+                Шляпа для карася (150 карасей)
+            </button>
+            <button class="customization-option" id="backgroundBtn">
+                Фон с озером (300 карасей)
+            </button>
+        </div>
+        
+        <div id="Themes" class="tabcontent">
+            <h3>Темы оформления</h3>
+            <p>Выберите понравившуюся тему для игры:</p>
+            
+            <div>
+                <div class="theme-btn active" style="background: #e0f7fa;" onclick="applyTheme('default')"></div>
+                <span class="theme-label">Стандартная</span>
+            </div>
+            
+            <div>
+                <div class="theme-btn" style="background: #121212;" onclick="applyTheme('dark')"></div>
+                <span class="theme-label">Темная</span>
+            </div>
+            
+            <div>
+                <div class="theme-btn" style="background: #0077be;" onclick="applyTheme('ocean')"></div>
+                <span class="theme-label">Океан</span>
+            </div>
+            
+            <div>
+                <div class="theme-btn" style="background: #2e8b57;" onclick="applyTheme('forest')"></div>
+                <span class="theme-label">Лесная</span>
+            </div>
+            
+            <div>
+                <div class="theme-btn" style="background: #ff7f50;" onclick="applyTheme('sunset')"></div>
+                <span class="theme-label">Закат</span>
+            </div>
+            
+            <div>
+                <div class="theme-btn" style="background: #0f0f1a; border: 2px solid #00ff9d;" onclick="applyTheme('neon')"></div>
+                <span class="theme-label">Неон</span>
+            </div>
+        </div>
+        
+        <div id="ManualCustomization" class="tabcontent">
+            <h3>Ручная настройка оформления</h3>
+            <p>Настройте цвета и внешний вид игры по своему вкусу:</p>
+            
+            <div class="customization-section">
+                <h4>Основные цвета</h4>
+                <div class="color-picker">
+                    <label for="bg-color">Фон игры:</label>
+                    <input type="color" id="bg-color" value="#e0f7fa" onchange="updateCustomization()">
+                    <input type="text" id="bg-color-text" value="#e0f7fa" onchange="updateCustomizationFromText(this, 'bg-color')">
+                </div>
+                <div class="color-picker">
+                    <label for="text-color">Цвет текста:</label>
+                    <input type="color" id="text-color" value="#333333" onchange="updateCustomization()">
+                    <input type="text" id="text-color-text" value="#333333" onchange="updateCustomizationFromText(this, 'text-color')">
+                </div>
+                <div class="color-picker">
+                    <label for="container-bg">Фон контейнера:</label>
+                    <input type="color" id="container-bg" value="#ffffff" onchange="updateCustomization()">
+                    <input type="text" id="container-bg-text" value="#ffffff" onchange="updateCustomizationFromText(this, 'container-bg')">
+                </div>
+                <div class="color-picker">
+                    <label for="header-color">Цвет заголовка:</label>
+                    <input type="color" id="header-color" value="#00796b" onchange="updateCustomization()">
+                    <input type="text" id="header-color-text" value="#00796b" onchange="updateCustomizationFromText(this, 'header-color')">
+                </div>
+            </div>
+            
+            <div class="customization-section">
+                <h4>Элементы интерфейса</h4>
+                <div class="color-picker">
+                    <label for="tab-bg">Фон вкладок:</label>
+                    <input type="color" id="tab-bg" value="#f1f1f1" onchange="updateCustomization()">
+                    <input type="text" id="tab-bg-text" value="#f1f1f1" onchange="updateCustomizationFromText(this, 'tab-bg')">
+                </div>
+                <div class="color-picker">
+                    <label for="tab-active-bg">Активная вкладка:</label>
+                    <input type="color" id="tab-active-bg" value="#4db6ac" onchange="updateCustomization()">
+                    <input type="text" id="tab-active-bg-text" value="#4db6ac" onchange="updateCustomizationFromText(this, 'tab-active-bg')">
+                </div>
+                <div class="color-picker">
+                    <label for="upgrade-bg">Кнопки улучшений:</label>
+                    <input type="color" id="upgrade-bg" value="#4db6ac" onchange="updateCustomization()">
+                    <input type="text" id="upgrade-bg-text" value="#4db6ac" onchange="updateCustomizationFromText(this, 'upgrade-bg')">
+                </div>
+                <div class="color-picker">
+                    <label for="stats-bg">Фон статистики:</label>
+                    <input type="color" id="stats-bg" value="#e0f7fa" onchange="updateCustomization()">
+                    <input type="text" id="stats-bg-text" value="#e0f7fa" onchange="updateCustomizationFromText(this, 'stats-bg')">
+                </div>
+            </div>
+            
+            <div class="customization-section">
+                <h4>Дополнительные настройки</h4>
+                <div class="color-picker">
+                    <label for="carp-filter">Фильтр карася:</label>
+                    <select id="carp-filter" onchange="updateCustomization()">
+                        <option value="none">Нет</option>
+                        <option value="sepia(1) saturate(3) hue-rotate(10deg)">Золотой</option>
+                        <option value="grayscale(100%)">Черно-белый</option>
+                        <option value="hue-rotate(90deg)">Зеленый</option>
+                        <option value="hue-rotate(180deg)">Фиолетовый</option>
+                        <option value="hue-rotate(270deg)">Розовый</option>
+                    </select>
+                </div>
+                <div class="color-picker">
+                    <label for="bg-image">Фоновое изображение:</label>
+                    <select id="bg-image" onchange="updateCustomization()">
+                        <option value="url('img/background-default.png')">По умолчанию</option>
+                        <option value="url('img/lake-background.png')">Озеро</option>
+                        <option value="none">Нет</option>
+                    </select>
+                </div>
+            </div>
+            
+            <button id="reset-customization" onclick="resetCustomization()">Сбросить настройки</button>
+            <button id="save-customization" onclick="saveCustomization()">Сохранить настройки</button>
+        </div>
+        
+        <div id="stats">
+            <p>Кликов в секунду: <span id="cps">0</span></p>
+            <p>Кликов за всё время: <span id="totalClicks">0</span></p>
+            <p>Активных питомцев: <span id="activePetsCount">0</span></p>
+            <p>Общий бонус: <span id="totalPetBonus">Нет</span></p>
+            <p>Общий множитель: <span id="totalMultiplier">1x</span></p>
+        </div>
+    </div>
+
+    <!-- Three.js and GLTF loader -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/loaders/GLTFLoader.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.132.2/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        let carps = 0;
+        let totalClicks = 0;
+        let cps = 0;
+        let activePets = [];
+        let petIntervals = [];
+        let glitchInterval = null;
+        let dropChance = 0.01;
+        let dropMultiplier = 1;
+        let currentPetPage = 0;
+        const PETS_PER_PAGE = 8;
+        let currentTheme = 'default';
+        let totalMultiplier = 1;
+        
+        // 3D World Variables
+        let world3DUnlocked = false;
+        let world3DSpeed = 1;
+        let world3DViewDistance = 20;
+        let world3DScore = 0;
+        let world3DScene, world3DCamera, world3DRenderer, world3DCarp, world3DControls;
+        let world3DKeys = {
+            up: false,
+            down: false,
+            left: false,
+            right: false
+        };
+        
+        // Joystick variables
+        let joystickActive = false;
+        let joystickDirection = { x: 0, y: 0, z: 0 };
+        let joystickBasePos = { x: 0, y: 0 };
+        let joystickPos = { x: 0, y: 0 };
+        let joystickMaxDistance = 60;
+        let depthUpActive = false;
+        let depthDownActive = false;
+        
+        // Camera control variables
+        let cameraRotation = { x: 0, y: 0 };
+        let cameraDistance = world3DViewDistance;
+        let isRotating = false;
+        let startTouch = { x: 0, y: 0 };
+        
+        // Default customization settings
+        const defaultCustomization = {
+            'bg-color': '#e0f7fa',
+            'text-color': '#333333',
+            'container-bg': '#ffffff',
+            'header-color': '#00796b',
+            'tab-bg': '#f1f1f1',
+            'tab-active-bg': '#4db6ac',
+            'upgrade-bg': '#4db6ac',
+            'stats-bg': '#e0f7fa',
+            'carp-filter': 'none',
+            'bg-image': "url('img/background-default.png')"
+        };
+        
+        const upgrades = {
+            autoClicker: {
+                level: 0,
+                cost: 10,
+                effect: 1,
+                name: "Автокликер"
+            },
+            doubleClick: {
+                level: 0,
+                cost: 50,
+                effect: 2,
+                name: "Удвоение"
+            },
+            megaCarp: {
+                level: 0,
+                cost: 100,
+                effect: 10,
+                name: "Мега-карась"
+            },
+            unlock3D: {
+                level: 0,
+                cost: 500,
+                effect: 1,
+                name: "3D Мир"
+            }
+        };
+        
+        // New upgrades system with 100 levels
+        const carpUpgrades = {
+            // Basic upgrades
+            basic1: { id: 'basic1', name: "Размер карася", description: "Увеличивает размер карася на 5%", cost: 50, effect: 0.05, maxLevel: 20, category: 'basic', icon: '🐟' },
+            basic2: { id: 'basic2', name: "Скорость плавания", description: "Увеличивает скорость анимации плавания", cost: 100, effect: 0.1, maxLevel: 10, category: 'basic', icon: '🏊' },
+            basic3: { id: 'basic3', name: "Яркость", description: "Увеличивает яркость карася", cost: 75, effect: 0.05, maxLevel: 10, category: 'basic', icon: '💡' },
+            
+            // Click power upgrades
+            click1: { id: 'click1', name: "Сила хвоста", description: "+1 к силе клика", cost: 25, effect: 1, maxLevel: 20, category: 'click', icon: '👊' },
+            click2: { id: 'click2', name: "Точность удара", description: "Шанс x2 к силе клика", cost: 100, effect: 0.05, maxLevel: 10, category: 'click', icon: '🎯' },
+            click3: { id: 'click3', name: "Критический удар", description: "Шанс x5 к силе клика", cost: 500, effect: 0.02, maxLevel: 5, category: 'click', icon: '💥' },
+            click4: { id: 'click4', name: "Молниеносный удар", description: "+0.5 к силе клика за уровень", cost: 200, effect: 0.5, maxLevel: 10, category: 'click', icon: '⚡' },
+            
+            // Income upgrades
+            income1: { id: 'income1', name: "Автоматическое кормление", description: "+0.5 карасей/сек", cost: 50, effect: 0.5, maxLevel: 20, category: 'income', icon: '⏱️' },
+            income2: { id: 'income2', name: "Рыбная ферма", description: "+2 карася/сек", cost: 300, effect: 2, maxLevel: 10, category: 'income', icon: '🏭' },
+            income3: { id: 'income3', name: "Золотая рыбка", description: "+5% к автоматическому доходу", cost: 150, effect: 0.05, maxLevel: 20, category: 'income', icon: '💰' },
+            
+            // Multiplier upgrades
+            multi1: { id: 'multi1', name: "Счастливая чешуя", description: "+5% ко всем доходам", cost: 200, effect: 0.05, maxLevel: 20, category: 'multiplier', icon: '🍀' },
+            multi2: { id: 'multi2', name: "Магический пузырь", description: "+10% ко всем доходам", cost: 500, effect: 0.1, maxLevel: 10, category: 'multiplier', icon: '🫧' },
+            multi3: { id: 'multi3', name: "Божественный карась", description: "+25% ко всем доходам", cost: 1000, effect: 0.25, maxLevel: 4, category: 'multiplier', icon: '🌟' },
+            
+            // Special upgrades
+            special1: { id: 'special1', name: "Рыбный магнат", description: "Удваивает все доходы", cost: 5000, effect: 2, maxLevel: 1, category: 'special', icon: '👑' },
+            special2: { id: 'special2', name: "Небесный карась", description: "Тройной доход каждые 10 секунд", cost: 3000, effect: 3, maxLevel: 1, category: 'special', icon: '☁️' },
+            special3: { id: 'special3', name: "Рыбный дождь", description: "Шанс получить 100 карасей при клике", cost: 2000, effect: 0.01, maxLevel: 5, category: 'special', icon: '🌧️' }
+        };
+        
+        // Initialize upgrades with level 0
+        for (const key in carpUpgrades) {
+            carpUpgrades[key].level = 0;
+        }
+        
+        const pets = {
+            miniCarp: {
+                id: 'miniCarp',
+                name: "Карась мини",
+                cost: 100,
+                rarity: "common",
+                bonus: "clickAdd",
+                value: 1,
+                bought: false,
+                image: "img/pet-mini-carp.png",
+                animation: "mini-carp-animation"
+            },
+            brokenCarp: {
+                id: 'brokenCarp',
+                name: "Сломанный карась",
+                cost: 150,
+                rarity: "common",
+                bonus: "randomMultiplier",
+                value: 0.1,
+                multiplier: 3,
+                bought: false,
+                image: "img/pet-broken-carp.png",
+                animation: "broken-carp-animation"
+            },
+            clockCarp: {
+                id: 'clockCarp',
+                name: "Карась с часами",
+                cost: 300,
+                rarity: "rare",
+                bonus: "autoClick",
+                value: 1,
+                interval: 5000,
+                bought: false,
+                image: "img/pet-clock-carp.png",
+                animation: "clock-carp-animation"
+            },
+            salmon: {
+                id: 'salmon',
+                name: "Лосось",
+                cost: 400,
+                rarity: "rare",
+                bonus: "clickAdd",
+                value: 2,
+                bought: false,
+                image: "img/pet-salmon.png",
+                animation: "salmon-animation"
+            },
+            suspiciousCarp: {
+                id: 'suspiciousCarp',
+                name: "Подозрительный карась",
+                cost: 500,
+                rarity: "rare",
+                bonus: "randomBonus",
+                value: 0,
+                bought: false,
+                image: "img/pet-suspicious-carp.png",
+                animation: "suspicious-carp-animation"
+            },
+            angryCarp: {
+                id: 'angryCarp',
+                name: "Злой карась",
+                cost: 800,
+                rarity: "epic",
+                bonus: "angry",
+                clickValue: 5,
+                penalty: 1,
+                bought: false,
+                image: "img/pet-angry-carp.png",
+                animation: "angry-carp-animation"
+            },
+            goldenCarp: {
+                id: 'goldenCarp',
+                name: "Золотой карась",
+                cost: 1000,
+                rarity: "epic",
+                bonus: "incomePercent",
+                value: 0.1,
+                bought: false,
+                image: "img/pet-golden-carp.png",
+                animation: "golden-carp-animation"
+            },
+            silverCarp: {
+                id: 'silverCarp',
+                name: "Серебряный карась",
+                cost: 800,
+                rarity: "epic",
+                bonus: "incomePercent",
+                value: 0.05,
+                bought: false,
+                image: "img/pet-silver-carp.png",
+                animation: "silver-carp-animation"
+            },
+            bronzeCarp: {
+                id: 'bronzeCarp',
+                name: "Бронзовый карась",
+                cost: 600,
+                rarity: "epic",
+                bonus: "incomePercent",
+                value: 0.03,
+                bought: false,
+                image: "img/pet-bronze-carp.png",
+                animation: "bronze-carp-animation"
+            },
+            bwCarp: {
+                id: 'bwCarp',
+                name: "Монохромный карась",
+                cost: 1500,
+                rarity: "legendary",
+                bonus: "multiplier",
+                value: 1.5,
+                bought: false,
+                image: "img/pet-bw-carp.png",
+                animation: "bw-carp-animation"
+            },
+            glitchCarp: {
+                id: 'glitchCarp',
+                name: "Карась-глитч",
+                cost: 2000,
+                rarity: "legendary",
+                bonus: "glitch",
+                minMultiplier: 0.5,
+                maxMultiplier: 3,
+                bought: false,
+                image: "img/pet-glitch-carp.png",
+                animation: "glitch-carp-animation"
+            },
+            clownCarp: {
+                id: 'clownCarp',
+                name: "Клоунский карась",
+                cost: 1200,
+                rarity: "legendary",
+                bonus: "randomClick",
+                minValue: 1,
+                maxValue: 10,
+                bought: false,
+                image: "img/pet-clown-carp.png",
+                animation: "clown-carp-animation"
+            },
+            colorfulCarp: {
+                id: 'colorfulCarp',
+                name: "Цветной карась",
+                cost: 1800,
+                rarity: "legendary",
+                bonus: "colorBonus",
+                value: 1,
+                bought: false,
+                image: "img/pet-colorful-carp.png",
+                animation: "colorful-carp-animation"
+            }
+        };
+        
+        const customizations = {
+            goldCarp: {
+                bought: false,
+                cost: 200,
+                name: "Золотой карась",
+                apply: function() {
+                    document.getElementById('carp').style.filter = "sepia(1) saturate(3) hue-rotate(10deg)";
+                    document.getElementById('carp-filter').value = "sepia(1) saturate(3) hue-rotate(10deg)";
+                }
+            },
+            hat: {
+                bought: false,
+                cost: 150,
+                name: "Шляпа",
+                apply: function() {
+                    alert("Шляпа добавлена! (в реальной игре здесь было бы визуальное изменение)");
+                }
+            },
+            background: {
+                bought: false,
+                cost: 300,
+                name: "Фон с озером",
+                apply: function() {
+                    document.body.style.backgroundImage = "url('img/lake-background.png')";
+                    document.body.style.backgroundSize = "cover";
+                    document.getElementById('bg-image').value = "url('img/lake-background.png')";
+                }
+            },
+            upgrade3DSpeed: {
+                bought: false,
+                cost: 300,
+                name: "Скорость в 3D",
+                apply: function() {
+                    world3DSpeed += 0.5;
+                    updateWorldStats();
+                }
+            },
+            upgrade3DView: {
+                bought: false,
+                cost: 400,
+                name: "Обзор в 3D",
+                apply: function() {
+                    world3DViewDistance += 5;
+                    world3DCamera.far = world3DViewDistance * 2;
+                    world3DCamera.updateProjectionMatrix();
+                    updateWorldStats();
+                }
+            }
+        };
+        
+        // Получаем элементы DOM
+        const carpElement = document.getElementById('carp');
+        const counterElement = document.getElementById('counter');
+        const cpsElement = document.getElementById('cps');
+        const totalClicksElement = document.getElementById('totalClicks');
+        const activePetsCountElement = document.getElementById('activePetsCount');
+        const totalPetBonusElement = document.getElementById('totalPetBonus');
+        const totalMultiplierElement = document.getElementById('totalMultiplier');
+        const petDropNotification = document.getElementById('pet-drop-notification');
+        const saveNotification = document.getElementById('save-notification');
+        const prevPetPageBtn = document.getElementById('prev-pet-page');
+        const nextPetPageBtn = document.getElementById('next-pet-page');
+        const autoClickerBtn = document.getElementById('autoClickerBtn');
+        const doubleClickBtn = document.getElementById('doubleClickBtn');
+        const megaCarpBtn = document.getElementById('megaCarpBtn');
+        const unlock3DBtn = document.getElementById('unlock3DBtn');
+        const goldCarpBtn = document.getElementById('goldCarpBtn');
+        const hatBtn = document.getElementById('hatBtn');
+        const backgroundBtn = document.getElementById('backgroundBtn');
+        const world3DContainer = document.getElementById('world-3d');
+        const worldStatsElement = document.getElementById('world-stats');
+        const exit3DBtn = document.getElementById('exit-3d-btn');
+        const world3DTab = document.getElementById('world3d-tab');
+        const joystickContainer = document.getElementById('joystick-container');
+        const joystick = document.getElementById('joystick');
+        const joystickBase = document.getElementById('joystick-base');
+        const depthControls = document.getElementById('depth-controls');
+        const upBtn = document.getElementById('up-btn');
+        const downBtn = document.getElementById('down-btn');
+        const cameraControls = document.getElementById('camera-controls');
+        const cameraRotate = document.getElementById('camera-rotate');
+        const cameraDot = document.getElementById('camera-dot');
+        const cameraZoomIn = document.getElementById('camera-zoom-in');
+        const cameraZoomOut = document.getElementById('camera-zoom-out');
+        const cameraReset = document.getElementById('camera-reset');
+        const basicUpgradesList = document.getElementById('basic-upgrades-list');
+        const clickPowerList = document.getElementById('click-power-list');
+        const incomeUpgradesList = document.getElementById('income-upgrades-list');
+        const multiplierUpgradesList = document.getElementById('multiplier-upgrades-list');
+        const specialUpgradesList = document.getElementById('special-upgrades-list');
+        
+        // Назначаем обработчики событий
+        autoClickerBtn.addEventListener('click', function() { buyUpgrade('autoClicker'); });
+        doubleClickBtn.addEventListener('click', function() { buyUpgrade('doubleClick'); });
+        megaCarpBtn.addEventListener('click', function() { buyUpgrade('megaCarp'); });
+        unlock3DBtn.addEventListener('click', function() { buyUpgrade('unlock3D'); });
+        goldCarpBtn.addEventListener('click', function() { buyCustomization('goldCarp'); });
+        hatBtn.addEventListener('click', function() { buyCustomization('hat'); });
+        backgroundBtn.addEventListener('click', function() { buyCustomization('background'); });
+        prevPetPageBtn.addEventListener('click', function() { changePetPage(-1); });
+        nextPetPageBtn.addEventListener('click', function() { changePetPage(1); });
+        carpElement.addEventListener('click', handleCarpClick);
+        exit3DBtn.addEventListener('click', exit3DWorld);
+        
+        // Joystick event handlers
+        joystick.addEventListener('mousedown', startJoystick);
+        joystick.addEventListener('touchstart', startJoystick);
+        
+        document.addEventListener('mousemove', moveJoystick);
+        document.addEventListener('touchmove', moveJoystick);
+        
+        document.addEventListener('mouseup', endJoystick);
+        document.addEventListener('touchend', endJoystick);
+        
+        // Depth controls handlers
+        upBtn.addEventListener('mousedown', () => { depthUpActive = true; });
+        upBtn.addEventListener('touchstart', () => { depthUpActive = true; });
+        upBtn.addEventListener('mouseup', () => { depthUpActive = false; });
+        upBtn.addEventListener('touchend', () => { depthUpActive = false; });
+        upBtn.addEventListener('mouseleave', () => { depthUpActive = false; });
+        
+        downBtn.addEventListener('mousedown', () => { depthDownActive = true; });
+        downBtn.addEventListener('touchstart', () => { depthDownActive = true; });
+        downBtn.addEventListener('mouseup', () => { depthDownActive = false; });
+        downBtn.addEventListener('touchend', () => { depthDownActive = false; });
+        downBtn.addEventListener('mouseleave', () => { depthDownActive = false; });
+        
+        // Camera controls handlers
+        cameraRotate.addEventListener('touchstart', handleTouchStart, { passive: false });
+        cameraRotate.addEventListener('touchmove', handleTouchMove, { passive: false });
+        cameraRotate.addEventListener('touchend', handleTouchEnd, { passive: false });
+        
+        cameraZoomIn.addEventListener('touchstart', () => {
+            cameraDistance = Math.max(5, cameraDistance - 2);
+        }, { passive: false });
+        
+        cameraZoomOut.addEventListener('touchstart', () => {
+            cameraDistance = Math.min(50, cameraDistance + 2);
+        }, { passive: false });
+        
+        cameraReset.addEventListener('touchstart', () => {
+            cameraRotation = { x: 0, y: 0 };
+            cameraDistance = world3DViewDistance;
+        }, { passive: false });
+        
+        // Keyboard controls for 3D world
+        document.addEventListener('keydown', (e) => {
+            if (!world3DUnlocked || world3DContainer.style.display !== 'block') return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': world3DKeys.up = true; break;
+                case 's': case 'arrowdown': world3DKeys.down = true; break;
+                case 'a': case 'arrowleft': world3DKeys.left = true; break;
+                case 'd': case 'arrowright': world3DKeys.right = true; break;
+                case 'q': case ' ': depthUpActive = true; break;
+                case 'e': case 'shift': depthDownActive = true; break;
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (!world3DUnlocked || world3DContainer.style.display !== 'block') return;
+            
+            switch(e.key.toLowerCase()) {
+                case 'w': case 'arrowup': world3DKeys.up = false; break;
+                case 's': case 'arrowdown': world3DKeys.down = false; break;
+                case 'a': case 'arrowleft': world3DKeys.left = false; break;
+                case 'd': case 'arrowright': world3DKeys.right = false; break;
+                case 'q': case ' ': depthUpActive = false; break;
+                case 'e': case 'shift': depthDownActive = false; break;
+            }
+        });
+        
+        function startJoystick(e) {
+            if (!world3DUnlocked || world3DContainer.style.display !== 'block') return;
+            
+            e.preventDefault();
+            joystickActive = true;
+            
+            // Get joystick base position
+            const rect = joystickContainer.getBoundingClientRect();
+            joystickBasePos = {
+                x: rect.left + rect.width / 2,
+                y: rect.top + rect.height / 2
+            };
+            
+            // Set initial position
+            moveJoystick(e);
+        }
+        
+        function moveJoystick(e) {
+            if (!joystickActive) return;
+            
+            e.preventDefault();
+            const clientX = e.clientX || e.touches[0].clientX;
+            const clientY = e.clientY || e.touches[0].clientY;
+            
+            // Calculate distance from base
+            const dx = clientX - joystickBasePos.x;
+            const dy = clientY - joystickBasePos.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Limit joystick movement
+            let angle = Math.atan2(dy, dx);
+            let limitedDistance = Math.min(distance, joystickMaxDistance);
+            
+            // Update joystick position
+            joystickPos = {
+                x: Math.cos(angle) * limitedDistance,
+                y: Math.sin(angle) * limitedDistance
+            };
+            
+            joystick.style.transform = `translate(calc(-50% + ${joystickPos.x}px), calc(-50% + ${joystickPos.y}px)`;
+            
+            // Calculate direction (normalized)
+            const directionX = dx / distance || 0;
+            const directionY = dy / distance || 0;
+            
+            // Determine movement direction based on angle
+            const angleDeg = angle * 180 / Math.PI;
+            
+            // Reset all directions
+            world3DKeys.up = false;
+            world3DKeys.down = false;
+            world3DKeys.left = false;
+            world3DKeys.right = false;
+            
+            // Set directions based on angle
+            if (distance > 15) { // Dead zone
+                if (angleDeg > -45 && angleDeg < 45) {
+                    world3DKeys.right = true;
+                } else if (angleDeg > 45 && angleDeg < 135) {
+                    world3DKeys.down = true;
+                } else if (angleDeg > 135 || angleDeg < -135) {
+                    world3DKeys.left = true;
+                } else if (angleDeg > -135 && angleDeg < -45) {
+                    world3DKeys.up = true;
+                }
+            }
+            
+            // Calculate joystick direction for animation
+            joystickDirection = {
+                x: directionX,
+                y: directionY,
+                z: 0
+            };
+        }
+        
+        function endJoystick() {
+            if (!joystickActive) return;
+            
+            joystickActive = false;
+            joystick.style.transform = 'translate(-50%, -50%)';
+            
+            // Reset all directions
+            world3DKeys.up = false;
+            world3DKeys.down = false;
+            world3DKeys.left = false;
+            world3DKeys.right = false;
+            
+            joystickDirection = { x: 0, y: 0, z: 0 };
+        }
+        
+        function handleTouchStart(e) {
+            if (!world3DUnlocked || world3DContainer.style.display === 'block') return;
+            
+            e.preventDefault();
+            isRotating = true;
+            const touch = e.touches[0];
+            const rect = cameraRotate.getBoundingClientRect();
+            startTouch = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+            cameraDot.style.transform = `translate(calc(-50% + ${startTouch.x - 60}px), calc(-50% + ${startTouch.y - 60}px)`;
+        }
+        
+        function handleTouchMove(e) {
+            if (!isRotating) return;
+            e.preventDefault();
+            
+            const touch = e.touches[0];
+            const rect = cameraRotate.getBoundingClientRect();
+            const currentTouch = {
+                x: touch.clientX - rect.left,
+                y: touch.clientY - rect.top
+            };
+            
+            // Вычисляем разницу в позиции
+            const diffX = currentTouch.x - startTouch.x;
+            const diffY = currentTouch.y - startTouch.y;
+            
+            // Обновляем вращение камеры
+            cameraRotation.x = diffX * 0.02; // Чувствительность по горизонтали
+            cameraRotation.y = diffY * 0.01; // Чувствительность по вертикали
+            
+            // Ограничиваем вертикальное вращение
+            cameraRotation.y = Math.max(-Math.PI/4, Math.min(Math.PI/4, cameraRotation.y));
+            
+            // Обновляем позицию точки
+            cameraDot.style.transform = `translate(calc(-50% + ${diffX}px), calc(-50% + ${diffY}px)`;
+        }
+        
+        function handleTouchEnd(e) {
+            isRotating = false;
+            cameraDot.style.transform = 'translate(-50%, -50%)';
+        }
+        
+        function init3DWorld() {
+            // Create scene
+            world3DScene = new THREE.Scene();
+            world3DScene.background = new THREE.Color(0x87CEEB); // Sky blue
+            
+            // Create camera
+            world3DCamera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, world3DViewDistance * 2);
+            world3DCamera.position.set(0, world3DViewDistance, world3DViewDistance);
+            world3DCamera.lookAt(0, 0, 0);
+            
+            // Create renderer
+            world3DRenderer = new THREE.WebGLRenderer({ antialias: true });
+            world3DRenderer.setSize(window.innerWidth, window.innerHeight);
+            world3DContainer.appendChild(world3DRenderer.domElement);
+            
+            // Add lights
+            const ambientLight = new THREE.AmbientLight(0x404040);
+            world3DScene.add(ambientLight);
+            
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            world3DScene.add(directionalLight);
+            
+            // Add water surface
+            const waterGeometry = new THREE.PlaneGeometry(100, 100);
+            const waterMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x1E90FF,
+                transparent: true,
+                opacity: 0.8,
+                side: THREE.DoubleSide
+            });
+            const water = new THREE.Mesh(waterGeometry, waterMaterial);
+            water.rotation.x = -Math.PI / 2;
+            water.position.y = -2;
+            world3DScene.add(water);
+            
+            // Add bottom
+            const bottomGeometry = new THREE.PlaneGeometry(100, 100);
+            const bottomMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x8B4513,
+                side: THREE.DoubleSide
+            });
+            const bottom = new THREE.Mesh(bottomGeometry, bottomMaterial);
+            bottom.rotation.x = -Math.PI / 2;
+            bottom.position.y = -5;
+            world3DScene.add(bottom);
+            
+            // Add some underwater plants
+            for (let i = 0; i < 20; i++) {
+                const plantHeight = Math.random() * 2 + 0.5;
+                const plantGeometry = new THREE.ConeGeometry(0.2, plantHeight, 8);
+                const plantMaterial = new THREE.MeshStandardMaterial({ color: 0x2E8B57 });
+                const plant = new THREE.Mesh(plantGeometry, plantMaterial);
+                
+                plant.position.x = (Math.random() - 0.5) * 80;
+                plant.position.z = (Math.random() - 0.5) * 80;
+                plant.position.y = -5 + plantHeight / 2;
+                plant.rotation.x = Math.PI / 2;
+                
+                world3DScene.add(plant);
+            }
+            
+            // Add some rocks
+            for (let i = 0; i < 10; i++) {
+                const rockSize = Math.random() * 1 + 0.5;
+                const rockGeometry = new THREE.SphereGeometry(rockSize, 8, 8);
+                const rockMaterial = new THREE.MeshStandardMaterial({ color: 0x696969 });
+                const rock = new THREE.Mesh(rockGeometry, rockMaterial);
+                
+                rock.position.x = (Math.random() - 0.5) * 80;
+                rock.position.z = (Math.random() - 0.5) * 80;
+                rock.position.y = -5 + rockSize;
+                
+                world3DScene.add(rock);
+            }
+            
+            // Load carp model
+            const loader = new THREE.GLTFLoader();
+            loader.load(
+                'models/carp.glb',
+                function (gltf) {
+                    world3DCarp = gltf.scene;
+                    world3DCarp.scale.set(0.5, 0.5, 0.5);
+                    world3DCarp.position.set(0, 0, 0);
+                    world3DScene.add(world3DCarp);
+                    
+                    // Start animation
+                    animate3DWorld();
+                },
+                undefined,
+                function (error) {
+                    console.error('Error loading carp model:', error);
+                    // Fallback: create a simple fish if model fails to load
+                    createSimpleFish();
+                    animate3DWorld();
+                }
+            );
+            
+            // Add collectible items
+            createCollectibles();
+            
+            // Update stats
+            updateWorldStats();
+        }
+        
+        function createSimpleFish() {
+            // Body
+            const bodyGeometry = new THREE.SphereGeometry(1, 16, 16);
+            const bodyMaterial = new THREE.MeshStandardMaterial({ color: 0xFFA500 });
+            const body = new THREE.Mesh(bodyGeometry, bodyMaterial);
+            
+            // Tail
+            const tailGeometry = new THREE.ConeGeometry(0.5, 1.5, 8);
+            const tailMaterial = new THREE.MeshStandardMaterial({ color: 0xFFA500 });
+            const tail = new THREE.Mesh(tailGeometry, tailMaterial);
+            tail.position.z = -1.5;
+            tail.rotation.x = Math.PI / 2;
+            
+            // Eye
+            const eyeGeometry = new THREE.SphereGeometry(0.2, 8, 8);
+            const eyeMaterial = new THREE.MeshStandardMaterial({ color: 0x000000 });
+            const eye = new THREE.Mesh(eyeGeometry, eyeMaterial);
+            eye.position.set(0.7, 0.3, 0.8);
+            
+            // Fin
+            const finGeometry = new THREE.ConeGeometry(0.3, 1, 8);
+            const finMaterial = new THREE.MeshStandardMaterial({ color: 0xFFA500 });
+            const fin = new THREE.Mesh(finGeometry, finMaterial);
+            fin.position.set(0, 0.5, 0);
+            fin.rotation.z = Math.PI / 2;
+            
+            world3DCarp = new THREE.Group();
+            world3DCarp.add(body);
+            world3DCarp.add(tail);
+            world3DCarp.add(eye);
+            world3DCarp.add(fin);
+            world3DScene.add(world3DCarp);
+        }
+        
+        function createCollectibles() {
+            // Clear existing collectibles
+            world3DScene.children.forEach(child => {
+                if (child.userData.isCollectible) {
+                    world3DScene.remove(child);
+                }
+            });
+            
+            // Create new collectibles
+            for (let i = 0; i < 10; i++) {
+                const size = Math.random() * 0.5 + 0.3;
+                const geometry = new THREE.SphereGeometry(size, 8, 8);
+                const material = new THREE.MeshStandardMaterial({ 
+                    color: Math.random() * 0xFFFFFF,
+                    emissive: 0xFFFF00,
+                    emissiveIntensity: 0.5
+                });
+                const collectible = new THREE.Mesh(geometry, material);
+                
+                collectible.position.x = (Math.random() - 0.5) * 80;
+                collectible.position.z = (Math.random() - 0.5) * 80;
+                collectible.position.y = (Math.random() - 0.5) * 3;
+                
+                collectible.userData = {
+                    isCollectible: true,
+                    value: Math.floor(Math.random() * 5) + 1
+                };
+                
+                world3DScene.add(collectible);
+            }
+        }
+        
+        function animate3DWorld() {
+            if (!world3DUnlocked || world3DContainer.style.display !== 'block') return;
+            
+            requestAnimationFrame(animate3DWorld);
+            
+            // Move carp based on controls
+            if (world3DCarp) {
+                const speed = world3DSpeed * 0.1;
+                
+                if (world3DKeys.up) {
+                    world3DCarp.position.z -= speed;
+                    world3DCarp.rotation.y = Math.PI;
+                }
+                if (world3DKeys.down) {
+                    world3DCarp.position.z += speed;
+                    world3DCarp.rotation.y = 0;
+                }
+                if (world3DKeys.left) {
+                    world3DCarp.position.x -= speed;
+                    world3DCarp.rotation.y = -Math.PI / 2;
+                }
+                if (world3DKeys.right) {
+                    world3DCarp.position.x += speed;
+                    world3DCarp.rotation.y = Math.PI / 2;
+                }
+                
+                // Depth control
+                if (depthUpActive) {
+                    world3DCarp.position.y += speed;
+                }
+                if (depthDownActive) {
+                    world3DCarp.position.y -= speed;
+                }
+                
+                // Simple swimming animation
+                if (world3DKeys.up || world3DKeys.down || world3DKeys.left || world3DKeys.right || depthUpActive || depthDownActive) {
+                    world3DCarp.position.y += Math.sin(Date.now() * 0.01) * 0.2;
+                }
+                
+                // Check boundaries
+                const boundary = 40;
+                world3DCarp.position.x = Math.max(-boundary, Math.min(boundary, world3DCarp.position.x));
+                world3DCarp.position.z = Math.max(-boundary, Math.min(boundary, world3DCarp.position.z));
+                world3DCarp.position.y = Math.max(-4, Math.min(4, world3DCarp.position.y));
+                
+                // Check collisions with collectibles
+                checkCollectibles();
+            }
+            
+            // Update camera to follow carp with rotation
+            if (world3DCarp && world3DCamera) {
+                // Вычисляем позицию камеры с учетом вращения
+                const angleX = cameraRotation.x;
+                const angleY = cameraRotation.y;
+                
+                const offsetX = Math.sin(angleX) * cameraDistance;
+                const offsetZ = Math.cos(angleX) * cameraDistance;
+                const offsetY = Math.sin(angleY) * cameraDistance + 5; // +5 для небольшого подъема
+                
+                world3DCamera.position.x = world3DCarp.position.x + offsetX;
+                world3DCamera.position.z = world3DCarp.position.z + offsetZ;
+                world3DCamera.position.y = world3DCarp.position.y + offsetY;
+                
+                // Камера всегда смотрит на карася
+                world3DCamera.lookAt(world3DCarp.position);
+            }
+            
+            world3DRenderer.render(world3DScene, world3DCamera);
+        }
+        
+        function checkCollectibles() {
+            if (!world3DCarp) return;
+            
+            const carpPosition = world3DCarp.position;
+            const collectibles = world3DScene.children.filter(child => child.userData.isCollectible);
+            
+            collectibles.forEach(collectible => {
+                const distance = carpPosition.distanceTo(collectible.position);
+                if (distance < 1.5) {
+                    // Collect item
+                    world3DScore += collectible.userData.value;
+                    world3DScene.remove(collectible);
+                    carps += collectible.userData.value;
+                    updateDisplay();
+                    updateWorldStats();
+                    
+                    // Show collection effect
+                    showCollectionEffect(collectible.position, collectible.userData.value);
+                }
+            });
+            
+            // Create new collectibles if needed
+            if (collectibles.length < 5) {
+                createCollectibles();
+            }
+        }
+        
+        function showCollectionEffect(position, value) {
+            const text = `+${value}`;
+            const div = document.createElement('div');
+            div.textContent = text;
+            div.style.position = 'absolute';
+            div.style.color = '#ff9800';
+            div.style.fontWeight = 'bold';
+            div.style.fontSize = '24px';
+            div.style.pointerEvents = 'none';
+            
+            // Convert 3D position to screen coordinates
+            const vector = new THREE.Vector3(position.x, position.y, position.z);
+            vector.project(world3DCamera);
+            
+            const x = (vector.x * 0.5 + 0.5) * window.innerWidth;
+            const y = (-(vector.y * 0.5) + 0.5) * window.innerHeight;
+            
+            div.style.left = `${x}px`;
+            div.style.top = `${y}px`;
+            div.style.transform = 'translate(-50%, -50%)';
+            div.style.animation = 'floatUp 1s forwards';
+            div.style.zIndex = '1000';
+            
+            world3DContainer.appendChild(div);
+            
+            setTimeout(() => {
+                world3DContainer.removeChild(div);
+            }, 1000);
+        }
+        
+        function updateWorldStats() {
+            if (!world3DUnlocked) return;
+            
+            worldStatsElement.textContent = `Скорость: ${world3DSpeed.toFixed(1)} | Очки: ${world3DScore} | Собрано: ${Math.floor(carps)} карасей`;
+        }
+        
+        function unlock3DWorld() {
+            world3DUnlocked = true;
+            unlock3DBtn.disabled = true;
+            unlock3DBtn.innerHTML = '3D Мир (разблокировано)';
+            saveGame();
+        }
+        
+        function open3DWorld() {
+            if (!world3DUnlocked) {
+                alert('Сначала разблокируйте 3D мир в магазине за 500 карасей!');
+                return;
+            }
+            
+            world3DContainer.style.display = 'block';
+            joystickContainer.style.display = 'block';
+            depthControls.style.display = 'flex';
+            cameraControls.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Initialize 3D world if not already done
+            if (!world3DScene) {
+                init3DWorld();
+            } else {
+                // Just resume animation
+                animate3DWorld();
+            }
+        }
+        
+        function exit3DWorld() {
+            world3DContainer.style.display = 'none';
+            joystickContainer.style.display = 'none';
+            depthControls.style.display = 'none';
+            cameraControls.style.display = 'none';
+            document.body.style.overflow = '';
+            
+            // Reset all controls
+            world3DKeys.up = false;
+            world3DKeys.down = false;
+            world3DKeys.left = false;
+            world3DKeys.right = false;
+            depthUpActive = false;
+            depthDownActive = false;
+            joystickDirection = { x: 0, y: 0, z: 0 };
+            cameraRotation = { x: 0, y: 0 };
+            cameraDistance = world3DViewDistance;
+        }
+        
+        function saveGame() {
+            const gameData = {
+                carps,
+                totalClicks,
+                cps,
+                activePets: activePets.map(pet => pet.id),
+                upgrades: {
+                    autoClicker: upgrades.autoClicker.level,
+                    doubleClick: upgrades.doubleClick.level,
+                    megaCarp: upgrades.megaCarp.level,
+                    unlock3D: upgrades.unlock3D.level
+                },
+                carpUpgrades: {},
+                pets: {},
+                customizations: {},
+                world3D: {
+                    unlocked: world3DUnlocked,
+                    speed: world3DSpeed,
+                    viewDistance: world3DViewDistance,
+                    score: world3DScore
+                },
+                currentTheme: currentTheme,
+                manualCustomization: getCurrentCustomization()
+            };
+            
+            for (const petId in pets) {
+                gameData.pets[petId] = pets[petId].bought;
+            }
+            
+            for (const customId in customizations) {
+                gameData.customizations[customId] = customizations[customId].bought;
+            }
+            
+            for (const upgradeId in carpUpgrades) {
+                gameData.carpUpgrades[upgradeId] = carpUpgrades[upgradeId].level;
+            }
+            
+            localStorage.setItem('carpClickerSave', JSON.stringify(gameData));
+            
+            saveNotification.style.display = 'block';
+            setTimeout(() => {
+                saveNotification.style.display = 'none';
+            }, 2000);
+        }
+        
+        function loadGame() {
+            const savedData = localStorage.getItem('carpClickerSave');
+            if (savedData) {
+                const data = JSON.parse(savedData);
+                
+                carps = data.carps || 0;
+                totalClicks = data.totalClicks || 0;
+                cps = data.cps || 0;
+                
+                if (data.upgrades) {
+                    upgrades.autoClicker.level = data.upgrades.autoClicker || 0;
+                    upgrades.doubleClick.level = data.upgrades.doubleClick || 0;
+                    upgrades.megaCarp.level = data.upgrades.megaCarp || 0;
+                    upgrades.unlock3D.level = data.upgrades.unlock3D || 0;
+                }
+                
+                if (data.carpUpgrades) {
+                    for (const upgradeId in data.carpUpgrades) {
+                        if (carpUpgrades[upgradeId]) {
+                            carpUpgrades[upgradeId].level = data.carpUpgrades[upgradeId] || 0;
+                        }
+                    }
+                }
+                
+                if (data.pets) {
+                    for (const petId in data.pets) {
+                        if (pets[petId]) {
+                            pets[petId].bought = data.pets[petId];
+                        }
+                    }
+                }
+                
+                if (data.activePets) {
+                    data.activePets.forEach(petId => {
+                        if (pets[petId] && pets[petId].bought) {
+                            activatePet(pets[petId]);
+                        }
+                    });
+                }
+                
+                if (data.customizations) {
+                    for (const customId in data.customizations) {
+                        if (customizations[customId]) {
+                            customizations[customId].bought = data.customizations[customId];
+                            if (customizations[customId].bought) {
+                                customizations[customId].apply();
+                            }
+                        }
+                    }
+                }
+                
+                if (data.world3D) {
+                    world3DUnlocked = data.world3D.unlocked || false;
+                    world3DSpeed = data.world3D.speed || 1;
+                    world3DViewDistance = data.world3D.viewDistance || 20;
+                    world3DScore = data.world3D.score || 0;
+                    
+                    if (world3DUnlocked) {
+                        unlock3DWorld();
+                    }
+                }
+                
+                if (data.currentTheme) {
+                    applyTheme(data.currentTheme, true);
+                }
+                
+                if (data.manualCustomization) {
+                    applyManualCustomization(data.manualCustomization);
+                }
+                
+                updateDisplay();
+                renderPetsList();
+                renderUpgradesList();
+                updateUpgradeButtons();
+                updateCustomizationButtons();
+                updatePetDisplay();
+                updatePetPageCounter();
+                updateMultiplier();
+                applyCarpUpgrades();
+            }
+        }
+        
+        function getCurrentCustomization() {
+            const customization = {};
+            const inputs = document.querySelectorAll('#ManualCustomization input[type="color"], #ManualCustomization select');
+            
+            inputs.forEach(input => {
+                customization[input.id] = input.value;
+            });
+            
+            return customization;
+        }
+        
+        function applyManualCustomization(customization) {
+            for (const key in customization) {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = customization[key];
+                }
+            }
+            updateCustomization();
+        }
+        
+        function updateCustomizationFromText(textInput, colorInputId) {
+            const colorInput = document.getElementById(colorInputId);
+            const value = textInput.value;
+            
+            if (/^#[0-9A-F]{6}$/i.test(value)) {
+                colorInput.value = value;
+                updateCustomization();
+            } else {
+                textInput.value = colorInput.value;
+            }
+        }
+        
+        function updateCustomization() {
+            // Основные цвета
+            document.documentElement.style.setProperty('--bg-color', document.getElementById('bg-color').value);
+            document.documentElement.style.setProperty('--text-color', document.getElementById('text-color').value);
+            document.documentElement.style.setProperty('--container-bg', document.getElementById('container-bg').value);
+            document.documentElement.style.setProperty('--header-color', document.getElementById('header-color').value);
+            
+            // Элементы интерфейса
+            document.documentElement.style.setProperty('--tab-bg', document.getElementById('tab-bg').value);
+            document.documentElement.style.setProperty('--tab-active-bg', document.getElementById('tab-active-bg').value);
+            document.documentElement.style.setProperty('--upgrade-bg', document.getElementById('upgrade-bg').value);
+            document.documentElement.style.setProperty('--stats-bg', document.getElementById('stats-bg').value);
+            
+            // Дополнительные настройки
+            document.getElementById('carp').style.filter = document.getElementById('carp-filter').value;
+            document.body.style.backgroundImage = document.getElementById('bg-image').value;
+            
+            // Обновляем текстовые поля
+            document.getElementById('bg-color-text').value = document.getElementById('bg-color').value;
+            document.getElementById('text-color-text').value = document.getElementById('text-color').value;
+            document.getElementById('container-bg-text').value = document.getElementById('container-bg').value;
+            document.getElementById('header-color-text').value = document.getElementById('header-color').value;
+            document.getElementById('tab-bg-text').value = document.getElementById('tab-bg').value;
+            document.getElementById('tab-active-bg-text').value = document.getElementById('tab-active-bg').value;
+            document.getElementById('upgrade-bg-text').value = document.getElementById('upgrade-bg').value;
+            document.getElementById('stats-bg-text').value = document.getElementById('stats-bg').value;
+        }
+        
+        function resetCustomization() {
+            for (const key in defaultCustomization) {
+                const input = document.getElementById(key);
+                if (input) {
+                    input.value = defaultCustomization[key];
+                }
+            }
+            updateCustomization();
+        }
+        
+        function saveCustomization() {
+            saveGame();
+            alert('Настройки сохранены!');
+        }
+        
+        function changePetPage(direction) {
+            const totalPages = Math.ceil(activePets.length / PETS_PER_PAGE) || 1;
+            
+            currentPetPage += direction;
+            
+            if (currentPetPage < 0) currentPetPage = totalPages - 1;
+            if (currentPetPage >= totalPages) currentPetPage = 0;
+            
+            updatePetDisplay();
+            updatePetPageCounter();
+        }
+        
+        function updatePetDisplay() {
+            // Очищаем все позиции
+            document.querySelectorAll('.pet-position').forEach(pos => {
+                pos.innerHTML = '';
+            });
+            
+            // Получаем питомцев для текущей страницы
+            const startIdx = currentPetPage * PETS_PER_PAGE;
+            const endIdx = startIdx + PETS_PER_PAGE;
+            const petsToShow = activePets.slice(startIdx, endIdx);
+            
+            // Размещаем питомцев на доступных позициях
+            const positions = document.querySelectorAll('.pet-position');
+            petsToShow.forEach((pet, idx) => {
+                if (idx < positions.length) {
+                    const petElement = createPetElement(pet);
+                    positions[idx].appendChild(petElement);
+                }
+            });
+        }
+        
+        function createPetElement(pet) {
+            const petElement = document.createElement('img');
+            petElement.src = pet.image;
+            petElement.className = `pet-icon ${pet.animation}`;
+            petElement.id = `pet-${pet.id}`;
+            petElement.title = `${pet.name}\n${getPetDescription(pet)}`;
+            petElement.onclick = function(e) {
+                e.stopPropagation();
+            };
+            return petElement;
+        }
+        
+        function updatePetPageCounter() {
+            const totalPages = Math.ceil(activePets.length / PETS_PER_PAGE) || 1;
+            document.getElementById('pet-page').textContent = 
+                `${currentPetPage + 1}/${totalPages}`;
+            
+            // Обновляем состояние кнопок
+            prevPetPageBtn.disabled = activePets.length <= PETS_PER_PAGE || currentPetPage === 0;
+            nextPetPageBtn.disabled = activePets.length <= PETS_PER_PAGE || currentPetPage === totalPages - 1;
+        }
+        
+        function handleCarpClick(event) {
+            let clickValue = 1;
+            
+            if (upgrades.doubleClick.level > 0) {
+                clickValue *= Math.pow(upgrades.doubleClick.effect, upgrades.doubleClick.level);
+            }
+            if (upgrades.megaCarp.level > 0) {
+                clickValue += upgrades.megaCarp.level * upgrades.megaCarp.effect;
+            }
+            
+            activePets.forEach(pet => {
+                switch(pet.bonus) {
+                    case "clickAdd":
+                        clickValue += pet.value;
+                        break;
+                    case "randomMultiplier":
+                        if (Math.random() < pet.value) {
+                            clickValue *= pet.multiplier;
+                            showBonusEffect("x" + pet.multiplier + "!", event.clientX, event.clientY);
+                        }
+                        break;
+                    case "randomBonus":
+                        const randomBonus = Math.random() * 5 + 1;
+                        clickValue += randomBonus;
+                        showBonusEffect("+" + randomBonus.toFixed(1) + "!", event.clientX, event.clientY);
+                        break;
+                    case "angry":
+                        clickValue += pet.clickValue;
+                        break;
+                    case "randomClick":
+                        const randomClick = Math.floor(Math.random() * (pet.maxValue - pet.minValue + 1)) + pet.minValue;
+                        clickValue += randomClick;
+                        showBonusEffect("+" + randomClick + "!", event.clientX, event.clientY);
+                        break;
+                    case "colorBonus":
+                        clickValue += pet.value;
+                        showBonusEffect("+1 за цвет!", event.clientX, event.clientY);
+                        break;
+                }
+            });
+            
+            let multiplier = totalMultiplier;
+            activePets.forEach(pet => {
+                if (pet.bonus === "incomePercent") {
+                    multiplier += pet.value;
+                } else if (pet.bonus === "multiplier") {
+                    multiplier *= pet.value;
+                } else if (pet.bonus === "glitch") {
+                    const glitchMultiplier = Math.random() * (pet.maxMultiplier - pet.minMultiplier) + pet.minMultiplier;
+                    multiplier *= glitchMultiplier;
+                    showBonusEffect("x" + glitchMultiplier.toFixed(1) + "!", event.clientX, event.clientY);
+                }
+            });
+            
+            // Check for special upgrades
+            if (carpUpgrades.special3.level > 0 && Math.random() < carpUpgrades.special3.effect * carpUpgrades.special3.level) {
+                clickValue += 100;
+                showBonusEffect("+100 рыбный дождь!", event.clientX, event.clientY);
+            }
+            
+            clickValue = Math.floor(clickValue * multiplier);
+            
+            carps += clickValue;
+            totalClicks++;
+            updateDisplay();
+            
+            showBonusEffect("+" + clickValue + "!", event.clientX, event.clientY);
+            
+            checkForPetDrop(event);
+        }
+        
+        function checkForPetDrop(event) {
+            if (Math.random() < dropChance * dropMultiplier) {
+                const availablePets = Object.values(pets).filter(p => !p.bought);
+                if (availablePets.length > 0) {
+                    const randomPet = availablePets[Math.floor(Math.random() * availablePets.length)];
+                    showPetDropAnimation(randomPet, event);
+                    randomPet.bought = true;
+                    renderPetsList();
+                    
+                    petDropNotification.textContent = `Вы получили: ${randomPet.name}!`;
+                    petDropNotification.style.display = 'block';
+                    setTimeout(() => {
+                        petDropNotification.style.display = 'none';
+                    }, 3000);
+                }
+            }
+            
+            dropMultiplier += 0.001;
+        }
+        
+        function showPetDropAnimation(pet, event) {
+            const petDrop = document.createElement('img');
+            petDrop.src = pet.image;
+            petDrop.className = 'pet-icon pet-drop-animation';
+            petDrop.style.left = (event.clientX - 50) + 'px';
+            petDrop.style.top = (event.clientY - 50) + 'px';
+            
+            document.body.appendChild(petDrop);
+            
+            setTimeout(() => {
+                document.body.removeChild(petDrop);
+            }, 2000);
+        }
+        
+        function showBonusEffect(text, x, y) {
+            const effect = document.createElement('div');
+            effect.textContent = text;
+            effect.style.position = 'absolute';
+            effect.style.color = '#ff9800';
+            effect.style.fontWeight = 'bold';
+            effect.style.pointerEvents = 'none';
+            effect.style.left = (x + 10) + 'px';
+            effect.style.top = (y - 10) + 'px';
+            effect.style.animation = 'floatUp 1s forwards';
+            effect.style.zIndex = '1000';
+            
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                document.body.removeChild(effect);
+            }, 1000);
+        }
+        
+        function buyUpgrade(upgradeName) {
+            const upgrade = upgrades[upgradeName];
+            
+            if (carps >= upgrade.cost) {
+                carps -= upgrade.cost;
+                upgrade.level++;
+                upgrade.cost = Math.floor(upgrade.cost * 1.5);
+                
+                if (upgradeName === 'autoClicker') {
+                    cps = upgrade.level * upgrade.effect;
+                    applyPetBonuses();
+                } else if (upgradeName === 'unlock3D' && upgrade.level === 1) {
+                    unlock3DWorld();
+                }
+                
+                updateDisplay();
+                updateUpgradeButtons();
+                
+                const btn = document.getElementById(`${upgradeName}Btn`);
+                btn.innerHTML = `${upgrade.name} (${upgrade.cost} карасей)<br>`;
+                
+                if (upgradeName === 'autoClicker') {
+                    btn.innerHTML += `+${upgrade.effect}/сек (Ур. ${upgrade.level})`;
+                } else if (upgradeName === 'doubleClick') {
+                    btn.innerHTML += `х${Math.pow(upgrade.effect, upgrade.level)} за клик`;
+                } else if (upgradeName === 'megaCarp') {
+                    btn.innerHTML += `+${upgrade.level * upgrade.effect} за клик`;
+                } else if (upgradeName === 'unlock3D' && upgrade.level > 0) {
+                    btn.innerHTML = '3D Мир (разблокировано)';
+                }
+                
+                saveGame();
+            }
+        }
+        
+        function buyCarpUpgrade(upgradeId) {
+            const upgrade = carpUpgrades[upgradeId];
+            
+            if (upgrade.level >= upgrade.maxLevel) return;
+            
+            const cost = Math.floor(upgrade.cost * Math.pow(1.15, upgrade.level));
+            
+            if (carps >= cost) {
+                carps -= cost;
+                upgrade.level++;
+                
+                updateDisplay();
+                renderUpgradesList();
+                updateMultiplier();
+                applyCarpUpgrades();
+                saveGame();
+            }
+        }
+        
+        function applyCarpUpgrades() {
+            // Apply size upgrade
+            const sizeMultiplier = 1 + (carpUpgrades.basic1.level * carpUpgrades.basic1.effect);
+            carpElement.style.transform = `scale(${sizeMultiplier})`;
+            
+            // Apply brightness upgrade
+            const brightness = 100 + (carpUpgrades.basic3.level * carpUpgrades.basic3.effect * 100);
+            carpElement.style.filter = `brightness(${brightness}%) ${document.getElementById('carp-filter').value}`;
+        }
+        
+        function updateMultiplier() {
+            totalMultiplier = 1;
+            
+            // Add multiplier from upgrades
+            totalMultiplier += carpUpgrades.multi1.level * carpUpgrades.multi1.effect;
+            totalMultiplier += carpUpgrades.multi2.level * carpUpgrades.multi2.effect;
+            totalMultiplier += carpUpgrades.multi3.level * carpUpgrades.multi3.effect;
+            
+            // Apply special upgrades
+            if (carpUpgrades.special1.level > 0) {
+                totalMultiplier *= carpUpgrades.special1.effect;
+            }
+            
+            totalMultiplierElement.textContent = totalMultiplier.toFixed(1) + 'x';
+        }
+        
+        function buyPet(petId) {
+            const pet = pets[petId];
+            
+            if (!pet.bought && carps >= pet.cost) {
+                carps -= pet.cost;
+                pet.bought = true;
+                activatePet(pet);
+                updateDisplay();
+                renderPetsList();
+                saveGame();
+            } else if (pet.bought) {
+                const index = activePets.findIndex(p => p.id === pet.id);
+                if (index >= 0) {
+                    deactivatePet(pet);
+                } else {
+                    activatePet(pet);
+                }
+                updateDisplay();
+                renderPetsList();
+                saveGame();
+            }
+        }
+        
+        function activatePet(pet) {
+            if (activePets.some(p => p.id === pet.id)) return;
+            
+            activePets.push(pet);
+            
+            // Если питомцев стало больше, чем на одной странице, обновляем отображение
+            if (activePets.length > PETS_PER_PAGE) {
+                updatePetDisplay();
+            } else {
+                // Иначе просто добавляем нового питомца
+                const positions = document.querySelectorAll('.pet-position');
+                const emptyPosition = Array.from(positions).find(pos => !pos.hasChildNodes());
+                if (emptyPosition) {
+                    const petElement = createPetElement(pet);
+                    emptyPosition.appendChild(petElement);
+                }
+            }
+            
+            if (pet.bonus === "autoClick") {
+                pet.intervalId = setInterval(() => {
+                    let income = pet.value;
+                    
+                    activePets.forEach(p => {
+                        if (p.bonus === "incomePercent") income += income * p.value;
+                        if (p.bonus === "multiplier") income *= p.value;
+                    });
+                    
+                    carps += Math.floor(income * totalMultiplier);
+                    updateDisplay();
+                    showBonusEffect("+" + income + " (авто)", 
+                        carpElement.offsetLeft + Math.random() * 100, 
+                        carpElement.offsetTop + Math.random() * 100);
+                }, pet.interval);
+                petIntervals.push(pet.intervalId);
+            }
+            
+            updatePetPageCounter();
+            applyPetBonuses();
+            renderPetsList();
+            updateDisplay();
+        }
+        
+        function deactivatePet(pet) {
+            const index = activePets.findIndex(p => p.id === pet.id);
+            if (index >= 0) {
+                activePets.splice(index, 1);
+            }
+            
+            const petElement = document.getElementById(`pet-${pet.id}`);
+            if (petElement) {
+                petElement.remove();
+            }
+            
+            if (pet.bonus === "autoClick" && pet.intervalId) {
+                clearInterval(pet.intervalId);
+                const intervalIndex = petIntervals.indexOf(pet.intervalId);
+                if (intervalIndex >= 0) {
+                    petIntervals.splice(intervalIndex, 1);
+                }
+            }
+            
+            const hasGlitch = activePets.some(p => p.bonus === "glitch");
+            if (!hasGlitch && glitchInterval) {
+                clearInterval(glitchInterval);
+                glitchInterval = null;
+            }
+            
+            // Обновляем отображение питомцев, если нужно
+            const totalPages = Math.ceil(activePets.length / PETS_PER_PAGE) || 1;
+            if (currentPetPage >= totalPages) {
+                currentPetPage = totalPages - 1;
+            }
+            
+            updatePetDisplay();
+            updatePetPageCounter();
+            applyPetBonuses();
+            renderPetsList();
+            updateDisplay();
+        }
+        
+        function renderPetsList() {
+            const petsList = document.getElementById('pets-list');
+            petsList.innerHTML = '';
+            
+            Object.values(pets).forEach(pet => {
+                const petElement = document.createElement('div');
+                petElement.className = `pet ${pet.rarity}`;
+                petElement.onclick = function() {
+                    if (!pet.bought && carps >= pet.cost) {
+                        buyPet(pet.id);
+                    } else if (pet.bought) {
+                        const index = activePets.findIndex(p => p.id === pet.id);
+                        if (index >= 0) {
+                            deactivatePet(pet);
+                        } else {
+                            activatePet(pet);
+                        }
+                    }
+                };
+                
+                const isActive = activePets.some(p => p.id === pet.id);
+                const isBought = pet.bought;
+                
+                let statusText = '';
+                if (isBought) {
+                    statusText = isActive ? 'Активен' : 'Неактивен';
+                } else {
+                    statusText = `Купить (${pet.cost})`;
+                }
+                
+                petElement.innerHTML = `
+                    <span class="pet-btn-text">${pet.name}</span>
+                    <img src="${pet.image}" class="pet-btn-icon ${pet.animation}" alt="${pet.name}">
+                    <span class="pet-badge ${pet.rarity}-badge">${getRarityName(pet.rarity)}</span>
+                    <div style="position: absolute; right: 10px; bottom: 10px; color: white; font-size: 12px;">
+                        ${statusText}
+                    </div>
+                    <div style="clear: both; margin-top: 5px;">${getPetDescription(pet)}</div>
+                `;
+                
+                petsList.appendChild(petElement);
+            });
+        }
+        
+        function renderUpgradesList() {
+            basicUpgradesList.innerHTML = '';
+            clickPowerList.innerHTML = '';
+            incomeUpgradesList.innerHTML = '';
+            multiplierUpgradesList.innerHTML = '';
+            specialUpgradesList.innerHTML = '';
+            
+            for (const key in carpUpgrades) {
+                const upgrade = carpUpgrades[key];
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade-item';
+                
+                const cost = Math.floor(upgrade.cost * Math.pow(1.15, upgrade.level));
+                
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-icon">${upgrade.icon}</div>
+                    <div class="upgrade-info">
+                        <div class="upgrade-name">${upgrade.name}</div>
+                        <div class="upgrade-description">${upgrade.description}</div>
+                        <div class="progress-bar">
+                            <div class="progress-fill" style="width: ${(upgrade.level / upgrade.maxLevel) * 100}%"></div>
+                        </div>
+                    </div>
+                    <div class="upgrade-level">${upgrade.level}/${upgrade.maxLevel}</div>
+                    <div class="upgrade-cost">${cost}</div>
+                    <button class="upgrade-btn" onclick="buyCarpUpgrade('${upgrade.id}')" 
+                        ${carps < cost || upgrade.level >= upgrade.maxLevel ? 'disabled' : ''}>
+                        ${upgrade.level >= upgrade.maxLevel ? 'MAX' : 'Улучшить'}
+                    </button>
+                `;
+                
+                switch(upgrade.category) {
+                    case 'basic': basicUpgradesList.appendChild(upgradeElement); break;
+                    case 'click': clickPowerList.appendChild(upgradeElement); break;
+                    case 'income': incomeUpgradesList.appendChild(upgradeElement); break;
+                    case 'multiplier': multiplierUpgradesList.appendChild(upgradeElement); break;
+                    case 'special': specialUpgradesList.appendChild(upgradeElement); break;
+                }
+            }
+        }
+        
+        function getRarityName(rarity) {
+            switch(rarity) {
+                case 'common': return 'Обычный';
+                case 'rare': return 'Редкий';
+                case 'epic': return 'Эпический';
+                case 'legendary': return 'Легендарный';
+                default: return '';
+            }
+        }
+        
+        function getPetDescription(pet) {
+            switch(pet.bonus) {
+                case "clickAdd": return `+${pet.value} к кликам`;
+                case "randomMultiplier": return `Шанс x${pet.multiplier} клика`;
+                case "autoClick": return `+${pet.value} карась/${pet.interval/1000}сек`;
+                case "randomBonus": return `Случайный бонус`;
+                case "angry": return `+${pet.clickValue} к кликам, но -${pet.penalty}/сек`;
+                case "incomePercent": return `+${pet.value * 100}% к доходам`;
+                case "multiplier": return `x${pet.value} все доходы`;
+                case "glitch": return `Случайный множитель`;
+                case "randomClick": return `+${pet.minValue}-${pet.maxValue} к кликам`;
+                case "colorBonus": return `+${pet.value} за цвет`;
+                default: return "";
+            }
+        }
+        
+        function buyCustomization(customizationName) {
+            const customization = customizations[customizationName];
+            
+            if (!customization.bought && carps >= customization.cost) {
+                carps -= customization.cost;
+                customization.bought = true;
+                customization.apply();
+                updateDisplay();
+                updateCustomizationButtons();
+                
+                const btn = document.getElementById(`${customizationName}Btn`);
+                btn.disabled = true;
+                btn.innerHTML = `${customization.name} (куплено)`;
+                
+                saveGame();
+            }
+        }
+        
+        function applyTheme(theme, initialLoad = false) {
+            // Remove all theme classes
+            document.body.classList.remove(
+                'default-theme',
+                'dark-theme',
+                'ocean-theme',
+                'forest-theme',
+                'sunset-theme',
+                'neon-theme'
+            );
+            
+            // Add selected theme class
+            document.body.classList.add(`${theme}-theme`);
+            
+            // Update active button
+            document.querySelectorAll('.theme-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            
+            if (!initialLoad) {
+                const activeBtn = document.querySelector(`.theme-btn[onclick="applyTheme('${theme}')"]`);
+                if (activeBtn) {
+                    activeBtn.classList.add('active');
+                }
+                
+                currentTheme = theme;
+                saveGame();
+            }
+        }
+        
+        function updateUpgradeButtons() {
+            for (const upgradeName in upgrades) {
+                const upgrade = upgrades[upgradeName];
+                const btn = document.getElementById(`${upgradeName}Btn`);
+                if (btn) {
+                    btn.disabled = carps < upgrade.cost || (upgradeName === 'unlock3D' && upgrade.level > 0);
+                    
+                    btn.innerHTML = `${upgrade.name} (${upgrade.cost} карасей)<br>`;
+                    if (upgradeName === 'autoClicker') {
+                        btn.innerHTML += `+${upgrade.effect}/сек (Ур. ${upgrade.level})`;
+                    } else if (upgradeName === 'doubleClick') {
+                        btn.innerHTML += `х${Math.pow(upgrade.effect, upgrade.level)} за клик`;
+                    } else if (upgradeName === 'megaCarp') {
+                        btn.innerHTML += `+${upgrade.level * upgrade.effect} за клик`;
+                    } else if (upgradeName === 'unlock3D' && upgrade.level > 0) {
+                        btn.innerHTML = '3D Мир (разблокировано)';
+                    }
+                }
+            }
+        }
+        
+        function updatePetButtons() {
+            renderPetsList();
+        }
+        
+        function updateCustomizationButtons() {
+            for (const customizationName in customizations) {
+                const customization = customizations[customizationName];
+                const btn = document.getElementById(`${customizationName}Btn`);
+                if (btn) {
+                    btn.disabled = customization.bought || carps < customization.cost;
+                    if (customization.bought) {
+                        btn.innerHTML = `${customization.name} (куплено)`;
+                    } else {
+                        btn.innerHTML = `${customization.name} (${customization.cost} карасей)`;
+                    }
+                }
+            }
+        }
+        
+        function updateDisplay() {
+            counterElement.textContent = `Карасей: ${carps}`;
+            cpsElement.textContent = cps;
+            totalClicksElement.textContent = totalClicks;
+            activePetsCountElement.textContent = activePets.length;
+            
+            let bonusText = "Нет";
+            if (activePets.length > 0) {
+                const bonuses = {};
+                
+                activePets.forEach(pet => {
+                    if (!bonuses[pet.bonus]) bonuses[pet.bonus] = 0;
+                    
+                    switch(pet.bonus) {
+                        case "clickAdd":
+                            bonuses[pet.bonus] += pet.value;
+                            break;
+                        case "incomePercent":
+                            bonuses[pet.bonus] += pet.value * 100;
+                            break;
+                        case "multiplier":
+                            bonuses[pet.bonus] += pet.value;
+                            break;
+                    }
+                });
+                
+                bonusText = Object.entries(bonuses)
+                    .filter(([_, value]) => value > 0)
+                    .map(([bonus, value]) => {
+                        switch(bonus) {
+                            case "clickAdd": return `+${value} к кликам`;
+                            case "incomePercent": return `+${value.toFixed(0)}% доход`;
+                            case "multiplier": return `x${value.toFixed(1)} множитель`;
+                            default: return "";
+                        }
+                    })
+                    .filter(text => text)
+                    .join(", ");
+            }
+            
+            totalPetBonusElement.textContent = bonusText;
+            
+            updateUpgradeButtons();
+            updatePetButtons();
+            updateCustomizationButtons();
+            renderUpgradesList();
+        }
+        
+        function openTab(evt, tabName) {
+            const tabcontent = document.getElementsByClassName("tabcontent");
+            for (let i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            
+            const tablinks = document.getElementsByClassName("tablinks");
+            for (let i = 0; i < tablinks.length; i++) {
+                tablinks[i].className = tablinks[i].className.replace(" active", "");
+            }
+            
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        function applyPetBonuses() {
+            let newCps = upgrades.autoClicker.level * upgrades.autoClicker.effect;
+            
+            activePets.forEach(pet => {
+                if (pet.bonus === "incomePercent") {
+                    newCps += newCps * pet.value;
+                } else if (pet.bonus === "multiplier") {
+                    newCps *= pet.value;
+                }
+            });
+            
+            cps = Math.floor(newCps);
+            updateDisplay();
+        }
+        
+        setInterval(() => {
+            if (cps > 0) {
+                let income = cps;
+                
+                activePets.forEach(pet => {
+                    if (pet.bonus === "incomePercent") {
+                        income += income * pet.value;
+                    } else if (pet.bonus === "multiplier") {
+                        income *= pet.value;
+                    } else if (pet.bonus === "glitch") {
+                        const glitchMultiplier = Math.random() * (pet.maxMultiplier - pet.minMultiplier) + pet.minMultiplier;
+                        income *= glitchMultiplier;
+                    }
+                });
+                
+                // Apply income upgrades
+                income += carpUpgrades.income1.level * carpUpgrades.income1.effect;
+                income += carpUpgrades.income2.level * carpUpgrades.income2.effect;
+                income += income * (carpUpgrades.income3.level * carpUpgrades.income3.effect);
+                
+                // Apply special upgrades
+                if (carpUpgrades.special2.level > 0 && Math.floor(Date.now() / 10000) % 3 === 0) {
+                    income *= carpUpgrades.special2.effect;
+                }
+                
+                carps += Math.floor(income * totalMultiplier);
+                updateDisplay();
+            }
+        }, 1000);
+        
+        window.addEventListener('load', function() {
+            loadGame();
+            updatePetPageCounter();
+            updatePetDisplay();
+            
+            // Handle window resize
+            window.addEventListener('resize', function() {
+                if (world3DUnlocked && world3DRenderer && world3DContainer.style.display === 'block') {
+                    world3DCamera.aspect = window.innerWidth / window.innerHeight;
+                    world3DCamera.updateProjectionMatrix();
+                    world3DRenderer.setSize(window.innerWidth, window.innerHeight);
+                }
+            });
+        });
+        
+        renderPetsList();
+        renderUpgradesList();
+        updateDisplay();
+    </script>
+</body>
+</html>
